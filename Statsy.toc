@@ -1,0 +1,14 @@
+## Interface: 11304
+## Title: Statsy
+## Author: Лайф
+## Version: 0.3
+## SavedVariables: StatsyDB
+## OptionalDeps: LibStub, Ace3
+
+embeds.xml
+locale\locale.xml
+
+const.lua
+statsy.lua
+minimap.lua
+gui.lua
