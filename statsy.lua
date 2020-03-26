@@ -21,6 +21,12 @@ function Statsy:InitDB()
                         honorableKills = 0,
                         flagCaptures = 0,
                         flagReturns = 0
+                    },
+                    maxStats = {
+                        killingBlows = 0,
+                        honorableKills = 0,
+                        flagCaptures = 0,
+                        flagReturns = 0
                     }
                 },
                 [BATTLEFIELD_ARATHI] = {
@@ -32,6 +38,12 @@ function Statsy:InitDB()
                         honorableKills = 0,
                         basesAssaulted = 0,
                         basesDefended = 0
+                    },
+                    maxStats = {
+                        killingBlows = 0,
+                        honorableKills = 0,
+                        basesAssaulted = 0,
+                        basesDefended = 0
                     }
                 },
                 [BATTLEFIELD_ALTERAC] = {
@@ -40,6 +52,17 @@ function Statsy:InitDB()
                     commonStats = {
                         killingBlows = 0,
                         deaths = 0,
+                        honorableKills = 0,
+                        graveyardsAssaulted = 0,
+                        graveyardsDefended = 0,
+                        towersAssaulted = 0,
+                        towersDefended = 0,
+                        minesCaptured = 0,
+                        leadersKilled = 0,
+                        secondaryObjectives = 0
+                    },
+                    maxStats = {
+                        killingBlows = 0,
                         honorableKills = 0,
                         graveyardsAssaulted = 0,
                         graveyardsDefended = 0,
@@ -97,6 +120,7 @@ function Statsy:OnEnable()
     self:RegisterEvent("CHAT_MSG_BG_SYSTEM_ALLIANCE")
     self:RegisterEvent("CHAT_MSG_BG_SYSTEM_NEUTRAL")
     self:RegisterChatCommand("statsy", "SLASHCOMMAND_STATSY")
+    self:RegisterMessage("STATSY", "MESSAGE_HANDLER")
 end
 
 function Statsy:OnDisable()
@@ -172,6 +196,11 @@ function Statsy:UPDATE_BATTLEFIELD_SCORE()
     end
 end
 
+function Statsy:MESSAGE_HANDLER(arg1, handlerMethod, ...)
+    print("STATSY:" .. handlerMethod)
+    self[handlerMethod](self, ...)
+end
+
 function Statsy:OnFactionWins(faction, battlefield)
     print("Statsy: " .. self:GetFactionName(faction) .. " wins!")
     self:RegisterEvent("UPDATE_BATTLEFIELD_SCORE")
@@ -188,7 +217,6 @@ function Statsy:AddGameResult(winFraction, battlefield)
 end
 
 function Statsy:GetBattlefieldScores()
-    print("GetBattlefieldScores: start")
     local battlefield = self.currentBattlefieldId
     local numScores = GetNumBattlefieldScores()
     for i = 1, numScores do
@@ -222,11 +250,10 @@ function Statsy:GetBattlefieldScores()
                 }
             end
             self:AddGameStats(battlefield, commonStats, specificStats)
-
+            self:AddGameMaxStats(battlefield, commonStats, specificStats)
             break
         end
     end
-    print("GetBattlefieldScores: end")
 end
 
 function Statsy:AddGameStats(battlefield, commonStats, specificStats)
@@ -255,7 +282,37 @@ function Statsy:AddGameStats(battlefield, commonStats, specificStats)
     end
 end
 
+function Statsy:AddGameMaxStats(battlefield, commonStats, specificStats)
+    print("AddGameMaxStats")
+    local savedStats = self.db.char.stats[battlefield]
+
+    local ms = savedStats.maxStats
+    ms.killingBlows = commonStats.killingBlows > ms.killingBlows and commonStats.killingBlows or ms.killingBlows
+    ms.honorableKills = commonStats.honorableKills > ms.honorableKills and commonStats.honorableKills or ms.honorableKills
+
+    if (battlefield == BATTLEFIELD_WARSONG) then
+        ms.flagCaptures = specificStats.flagCaptures > ms.flagCaptures and specificStats.flagCaptures or ms.flagCaptures
+        ms.flagReturns = specificStats.flagReturns > ms.flagReturns and specificStats.flagReturns or ms.flagReturns
+    elseif (battlefield == BATTLEFIELD_ARATHI) then
+        ms.basesAssaulted = specificStats.basesAssaulted > ms.basesAssaulted and specificStats.basesAssaulted or ms.basesAssaulted
+        ms.basesDefended = specificStats.basesDefended > ms.basesDefended and specificStats.basesDefended or ms.basesDefended
+    elseif (battlefield == BATTLEFIELD_ALTERAC) then
+        ms.graveyardsAssaulted = specificStats.graveyardsAssaulted > ms.graveyardsAssaulted and specificStats.graveyardsAssaulted or ms.graveyardsAssaulted
+        ms.graveyardsDefended = specificStats.graveyardsDefended > ms.graveyardsDefended and specificStats.graveyardsDefended or ms.graveyardsDefended
+        ms.towersAssaulted = specificStats.towersAssaulted > ms.towersAssaulted and specificStats.towersAssaulted or ms.towersAssaulted
+        ms.towersDefended = specificStats.towersDefended > ms.towersDefended and specificStats.towersDefended or ms.towersDefended
+        ms.minesCaptured = specificStats.minesCaptured > ms.minesCaptured and specificStats.minesCaptured or ms.minesCaptured
+        ms.leadersKilled = specificStats.leadersKilled > ms.leadersKilled and specificStats.leadersKilled or ms.leadersKilled
+        ms.secondaryObjectives = specificStats.secondaryObjectives > ms.secondaryObjectives and specificStats.secondaryObjectives or ms.secondaryObjectives
+    end
+end
+
 function Statsy:SLASHCOMMAND_STATSY()
+    self:PrintReport()
+    self:SendMessage("GUI", "OptionsToggle")
+end
+
+function Statsy:PrintReport()
     print(COLOR_RED .. "Statsy report:")
     print("---")
 
@@ -273,14 +330,19 @@ function Statsy:SLASHCOMMAND_STATSY()
         print("[".. bfName .. "] Games: " .. bfGames .. ", Wins: " .. bfStats.wins .. ", Losses: " .. bfStats.losses .. ", WinRate: " .. string.format("%0.2f", bfWinRate) .. "%")
 
         local bfCs = bfStats.commonStats
+        local bfMs = bfStats.maxStats
         print("[".. bfName .. "] Killing Blows: " .. bfCs.killingBlows .. ", Deaths: " .. bfCs.deaths .. ", Honorable Kills: " .. bfCs.honorableKills)
+        print("[".. bfName .. "] Max Killing Blows: " .. bfMs.killingBlows .. ", Max Honorable Kills: " .. bfMs.honorableKills)
 
         if (battlefield == BATTLEFIELD_WARSONG) then
             print("[".. bfName .. "] Flag Captures: " .. bfCs.flagCaptures .. ", Flag Returns: " .. bfCs.flagReturns)
+            print("[".. bfName .. "] Max Flag Captures: " .. bfMs.flagCaptures .. ", Max Flag Returns: " .. bfMs.flagReturns)
         elseif (battlefield == BATTLEFIELD_ARATHI) then
             print("[".. bfName .. "] Bases Assaulted: " .. bfCs.basesAssaulted .. ", Bases Defended: " .. bfCs.basesDefended)
+            print("[".. bfName .. "] Max Bases Assaulted: " .. bfMs.basesAssaulted .. ", Max Bases Defended: " .. bfMs.basesDefended)
         elseif (battlefield == BATTLEFIELD_ALTERAC) then
             print("[".. bfName .. "] Graveyards Assaulted: " .. bfCs.graveyardsAssaulted .. ", Graveyards Defended: " .. bfCs.graveyardsDefended .. ", Towers Assaulted: " .. bfCs.towersAssaulted .. ", Towers Defended: " .. bfCs.towersDefended .. ", Mines Captured: " .. bfCs.minesCaptured .. ", Leaders Killed: " .. bfCs.leadersKilled .. ", Secondary Objectives: " .. bfCs.secondaryObjectives)
+            print("[".. bfName .. "] Max Graveyards Assaulted: " .. bfMs.graveyardsAssaulted .. ", Max Graveyards Defended: " .. bfMs.graveyardsDefended .. ", Max Towers Assaulted: " .. bfMs.towersAssaulted .. ", Max Towers Defended: " .. bfMs.towersDefended .. ", Max Mines Captured: " .. bfMs.minesCaptured .. ", Max Leaders Killed: " .. bfMs.leadersKilled .. ", Max Secondary Objectives: " .. bfMs.secondaryObjectives)
         end
 
         sumGames = sumGames + bfGames

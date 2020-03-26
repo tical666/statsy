@@ -1,57 +1,36 @@
---local AceGUI = LibStub("AceGUI-3.0")
---local AceEvent = LibStub("AceEvent-3.0")
-
 local GUI = {
-    testFrame = nil
+    optionsFrame = nil
 }
 
-function GUI:TestFrameShow()
-    if (self.testFrame ~= nil) then
-        return
+local AceGUI = LibStub("AceGUI-3.0")
+LibStub("AceEvent-3.0"):Embed(GUI)
+
+function GUI:OptionsFrameToggle()
+    if (self.optionsFrame == nil) then
+        self:OptionsFrameCreate()
+    else
+        AceGUI:Release(self.optionsFrame)
+        self.optionsFrame = nil
     end
-    self:TestFrameCreate()
 end
 
-function GUI:TestFrameHide()
-    if (self.testFrame == nil) then
-        return
-    end
-    self.testFrame:Hide()
-    self.testFrame:SetParent(nil)
-    self.testFrame = nil
+function GUI:OptionsFrameCreate()
+    local f = AceGUI:Create("Frame")
+    f:SetTitle("Statsy Options")
+    f:SetStatusText("Statsy Options")
+    f:SetCallback("OnClose",
+        function(widget)
+            self.optionsFrame = nil
+            AceGUI:Release(widget)
+        end)
+    f:SetLayout("Flow")
+
+    self.optionsFrame = f
 end
 
-function GUI:TestFrameCreate()
-    local f = CreateFrame("Frame", nil, UIParent)
-    f:SetFrameStrata("BACKGROUND")
-    f:SetWidth(64)
-    f:SetHeight(64)
-
-    local t = f:CreateTexture(nil, "BACKGROUND")
-    t:SetTexture("Interface\\Icons\\Ability_Ambush")
-    t:SetAllPoints(f)
-    f.texture = t
-
-    f:SetPoint("TOPLEFT", 64, -64)
-    f:Show()
-
-    self.testFrame = f
+function GUI:MESSAGE_HANDLER(arg1, handlerMethod, ...)
+    print("GUI:" .. handlerMethod)
+    self[handlerMethod](self, ...)
 end
 
---[[
--- Пример инициализации через функцию инициализации в основном методе
-function GUI:Init()
-    --Statsy.GUI = GUI
-end
-
-Statsy:AddInitFunction(GUI:Init)
-]]
-
---[[
--- Пример инициализации через события
-function GUI:MessageHandler(handlerMethod, ...)
-    self[handlerMethod](...)
-end
-
-AceEvent:RegisterMessage("GUI", self:MessageHandler)
-]]
+GUI:RegisterMessage("GUI", "MESSAGE_HANDLER")
