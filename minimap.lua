@@ -1,6 +1,8 @@
-local AceEvent = LibStub("AceEvent-3.0")
+local StatsyMinimap = {
+	db = nil
+}
 
-local StatsyMinimap = {}
+LibStub("AceEvent-3.0"):Embed(StatsyMinimap)
 
 StatsyMinimap.StatsyButton = LibStub("LibDBIcon-1.0")
 
@@ -12,20 +14,22 @@ StatsyMinimap.StatsyLDB = LibStub:GetLibrary("LibDataBroker-1.1"):NewDataObject(
 		tooltip:AddLine(COLOR_RED .. "Statsy");
 		tooltip:AddLine("Report stats to chat")
 	end,
-	OnClick = function(self, button)
+	OnClick = function(arg1, button)
 		if (button == MOUSE_BUTTON_LEFT) then
-			AceEvent:SendMessage("STATSY", "PrintReport")
+			StatsyMinimap:SendMessage("STATSY", "PrintReport")
 		elseif (button == MOUSE_BUTTON_RIGHT) then
-			AceEvent:SendMessage("STATSY", "ToggleMakeConfirmScreenshot")
-			AceEvent:SendMessage("GUI", "OptionsFrameToggle")
+			StatsyMinimap:SendMessage("GUI", "OptionsFrameToggle")
 		end
 	end
 })
 
-function StatsyMinimap.Init()
-	print("MinimapButton.Init")
-	--TODO: Избавиться от Init метода
-    StatsyMinimap.StatsyButton:Register("Statsy", StatsyMinimap.StatsyLDB, Statsy.db.profile.minimap)
+function StatsyMinimap:InitDB(db)
+	self.db = db
+	self.StatsyButton:Register("Statsy", self.StatsyLDB, self.db.profile.minimap)
 end
 
-Statsy:AddInitFunction(StatsyMinimap.Init)
+function StatsyMinimap:MESSAGE_HANDLER(arg1, handlerMethod, ...)
+    self[handlerMethod](self, ...)
+end
+
+StatsyMinimap:RegisterMessage("MINIMAP", "MESSAGE_HANDLER")

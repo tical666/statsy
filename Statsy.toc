@@ -9,6 +9,8 @@ embeds.xml
 locale\locale.xml
 
 const.lua
+model.lua
+utils.lua
 statsy.lua
 minimap.lua
 gui.lua

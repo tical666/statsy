@@ -4,87 +4,10 @@ L = LibStub("AceLocale-3.0"):GetLocale("Statsy")
 function Statsy:OnInitialize()
     self:InitDB()
     self:Init()
-    self:RunInitFunctions()
 end
 
 function Statsy:InitDB()
-    local defaults = {
-        char = {
-            lastBattlefieldStatus = {},
-            stats = {
-                [BATTLEFIELD_WARSONG] = {
-                    wins = 0,
-                    losses = 0,
-                    commonStats = {
-                        killingBlows = 0,
-                        deaths = 0,
-                        honorableKills = 0,
-                        flagCaptures = 0,
-                        flagReturns = 0
-                    },
-                    maxStats = {
-                        killingBlows = 0,
-                        honorableKills = 0,
-                        flagCaptures = 0,
-                        flagReturns = 0
-                    }
-                },
-                [BATTLEFIELD_ARATHI] = {
-                    wins = 0,
-                    losses = 0,
-                    commonStats = {
-                        killingBlows = 0,
-                        deaths = 0,
-                        honorableKills = 0,
-                        basesAssaulted = 0,
-                        basesDefended = 0
-                    },
-                    maxStats = {
-                        killingBlows = 0,
-                        honorableKills = 0,
-                        basesAssaulted = 0,
-                        basesDefended = 0
-                    }
-                },
-                [BATTLEFIELD_ALTERAC] = {
-                    wins = 0,
-                    losses = 0,
-                    commonStats = {
-                        killingBlows = 0,
-                        deaths = 0,
-                        honorableKills = 0,
-                        graveyardsAssaulted = 0,
-                        graveyardsDefended = 0,
-                        towersAssaulted = 0,
-                        towersDefended = 0,
-                        minesCaptured = 0,
-                        leadersKilled = 0,
-                        secondaryObjectives = 0
-                    },
-                    maxStats = {
-                        killingBlows = 0,
-                        honorableKills = 0,
-                        graveyardsAssaulted = 0,
-                        graveyardsDefended = 0,
-                        towersAssaulted = 0,
-                        towersDefended = 0,
-                        minesCaptured = 0,
-                        leadersKilled = 0,
-                        secondaryObjectives = 0
-                    }
-                }
-            }
-        },
-        profile = {
-            makeConfirmScreenshots = false, -- Делать скриншот игры, если есть прок (для отлавливания события вне игры)
-            minimap = {
-                shown = true,
-                locked = false,
-                minimapPos = 218
-            }
-        }
-    }
-    self.db = LibStub("AceDB-3.0"):New("StatsyDB", defaults)
+    self.db = LibStub("AceDB-3.0"):New("StatsyDB", Model)
 end
 
 function Statsy:Init()
@@ -92,6 +15,9 @@ function Statsy:Init()
     self.playerName = self:GetPlayerName()
     self.playerFaction = self:GetPlayerFaction() == "Alliance" and FACTION_ALIANCE or FACTION_HORDE
     self.currentBattlefieldId = BATTLEFIELD_NONE
+
+    self:SendMessage("GUI", "InitDB", self.db)
+    self:SendMessage("MINIMAP", "InitDB", self.db)
 end
 
 function Statsy:AddInitFunction(func)
@@ -99,17 +25,6 @@ function Statsy:AddInitFunction(func)
         self.initFunctions = {}
     end
 	self.initFunctions[#self.initFunctions + 1] = func
-end
-
-function Statsy:RunInitFunctions()
-    print("initFunctions: " .. #self.initFunctions)
-    for i = 1, #self.initFunctions do
-        local func = self.initFunctions[i]
-        if func and type(func) == "function" then
-            func()
-        end
-    end
-    self.initFunctions = {}
 end
 
 function Statsy:OnEnable()
@@ -139,17 +54,17 @@ function Statsy:UPDATE_BATTLEFIELD_STATUS()
         if (self.db.char.lastBattlefieldStatus[i] ~= status) then
             self.db.char.lastBattlefieldStatus[i] = status
             if (status == "none") then
-                print("UPDATE_BATTLEFIELD_STATUS: None")
+                self:PrintMessage("UPDATE_BATTLEFIELD_STATUS: None")
             elseif (status == "confirm") then
                 -- TODO: Сделать опциональное уведомление в личку о старте?
                 self:SendGroupMessage("Statsy: BG Confirmed '" .. mapName .. "'")
                 self:MakeConfirmScreenshot()
             elseif (status == "active") then
-                print("UPDATE_BATTLEFIELD_STATUS: BG Active '" .. mapName .. "'")
+                self:PrintMessage("UPDATE_BATTLEFIELD_STATUS: BG Active '" .. mapName .. "'")
             elseif (status == "queued") then
-                self:SendGroupMessage("Statsy: BG Queued '" .. mapName .. "'")
+                self:PrintMessage("Statsy: BG Queued '" .. mapName .. "'")
             elseif (status == "error") then
-                print("UPDATE_BATTLEFIELD_STATUS: Error")
+                self:PrintMessage("UPDATE_BATTLEFIELD_STATUS: Error")
             end
         end
     end
@@ -183,26 +98,25 @@ end
 
 function Statsy:UPDATE_BATTLEFIELD_SCORE()
     if self.currentBattlefieldId == BATTLEFIELD_WARSONG then
-        print("UPDATE_BATTLEFIELD_SCORE: Warsong")
+        self:PrintMessage("UPDATE_BATTLEFIELD_SCORE: Warsong")
         self:GetBattlefieldScores()
         self:UnregisterEvent("UPDATE_BATTLEFIELD_SCORE")
     elseif self.currentBattlefieldId == BATTLEFIELD_ARATHI then
-        print("UPDATE_BATTLEFIELD_SCORE: Arathi")
+        self:PrintMessage("UPDATE_BATTLEFIELD_SCORE: Arathi")
         self:GetBattlefieldScores()
         self:UnregisterEvent("UPDATE_BATTLEFIELD_SCORE")
     else
-        print("UPDATE_BATTLEFIELD_SCORE")
+        self:PrintMessage("UPDATE_BATTLEFIELD_SCORE")
         self:UnregisterEvent("UPDATE_BATTLEFIELD_SCORE")
     end
 end
 
 function Statsy:MESSAGE_HANDLER(arg1, handlerMethod, ...)
-    print("STATSY:" .. handlerMethod)
     self[handlerMethod](self, ...)
 end
 
 function Statsy:OnFactionWins(faction, battlefield)
-    print("Statsy: " .. self:GetFactionName(faction) .. " wins!")
+    self:PrintMessage("Statsy: " .. self:GetFactionName(faction) .. " wins!")
     self:RegisterEvent("UPDATE_BATTLEFIELD_SCORE")
     RequestBattlefieldScoreData()
     self:AddGameResult(faction, battlefield)
@@ -210,9 +124,11 @@ end
 
 function Statsy:AddGameResult(winFraction, battlefield)
     if (self.playerFaction == winFraction) then
-        self.db.char.stats[battlefield].wins = self.db.char.stats[battlefield].wins + 1
+        local wins = self.db.char.stats[battlefield].wins
+        wins.value = wins.value + 1
     else
-        self.db.char.stats[battlefield].losses = self.db.char.stats[battlefield].losses + 1
+        local losses = self.db.char.stats[battlefield].losses
+        losses.value = losses.value + 1
     end
 end
 
@@ -257,53 +173,52 @@ function Statsy:GetBattlefieldScores()
 end
 
 function Statsy:AddGameStats(battlefield, commonStats, specificStats)
-    print("AddGameStats")
     local savedStats = self.db.char.stats[battlefield]
 
     local cs = savedStats.commonStats
-    cs.killingBlows = commonStats.killingBlows
-    cs.deaths = commonStats.deaths
-    cs.honorableKills = commonStats.honorableKills
+    cs.killingBlows.value = commonStats.killingBlows
+    cs.deaths.value = commonStats.deaths
+    cs.honorableKills.value = commonStats.honorableKills
     
     if (battlefield == BATTLEFIELD_WARSONG) then
-        cs.flagCaptures = cs.flagCaptures + specificStats.flagCaptures
-        cs.flagReturns = cs.flagReturns + specificStats.flagReturns
+        cs.flagCaptures.value = cs.flagCaptures.value + specificStats.flagCaptures
+        cs.flagReturns.value = cs.flagReturns.value + specificStats.flagReturns
     elseif (battlefield == BATTLEFIELD_ARATHI) then
-        cs.basesAssaulted = cs.basesAssaulted + specificStats.basesAssaulted
-        cs.basesDefended = cs.basesDefended + specificStats.basesDefended
+        cs.basesAssaulted.value = cs.basesAssaulted.value + specificStats.basesAssaulted
+        cs.basesDefended.value = cs.basesDefended.value + specificStats.basesDefended
     elseif (battlefield == BATTLEFIELD_ALTERAC) then
-        cs.graveyardsAssaulted = cs.graveyardsAssaulted + specificStats.graveyardsAssaulted
-        cs.graveyardsDefended = cs.graveyardsDefended + specificStats.graveyardsDefended
-        cs.towersAssaulted = cs.towersAssaulted + specificStats.towersAssaulted
-        cs.towersDefended = cs.towersDefended + specificStats.towersDefended
-        cs.minesCaptured = cs.minesCaptured + specificStats.minesCaptured
-        cs.leadersKilled = cs.leadersKilled + specificStats.leadersKilled
-        cs.secondaryObjectives = cs.secondaryObjectives + specificStats.secondaryObjectives
+        cs.graveyardsAssaulted.value = cs.graveyardsAssaulted.value + specificStats.graveyardsAssaulted
+        cs.graveyardsDefended.value = cs.graveyardsDefended.value + specificStats.graveyardsDefended
+        cs.towersAssaulted.value = cs.towersAssaulted.value + specificStats.towersAssaulted
+        cs.towersDefended.value = cs.towersDefended.value + specificStats.towersDefended
+        cs.minesCaptured.value = cs.minesCaptured.value + specificStats.minesCaptured
+        cs.leadersKilled.value = cs.leadersKilled.value + specificStats.leadersKilled
+        cs.secondaryObjectives.value = cs.secondaryObjectives.value + specificStats.secondaryObjectives
     end
 end
 
 function Statsy:AddGameMaxStats(battlefield, commonStats, specificStats)
-    print("AddGameMaxStats")
     local savedStats = self.db.char.stats[battlefield]
 
     local ms = savedStats.maxStats
-    ms.killingBlows = commonStats.killingBlows > ms.killingBlows and commonStats.killingBlows or ms.killingBlows
-    ms.honorableKills = commonStats.honorableKills > ms.honorableKills and commonStats.honorableKills or ms.honorableKills
+    ms.killingBlows.value = commonStats.killingBlows > ms.killingBlows.value and commonStats.killingBlows or ms.killingBlows.value
+    ms.deaths.value = commonStats.deaths > ms.deaths.value and commonStats.deaths or ms.deaths.value
+    ms.honorableKills.value = commonStats.honorableKills > ms.honorableKills.value and commonStats.honorableKills or ms.honorableKills.value
 
     if (battlefield == BATTLEFIELD_WARSONG) then
-        ms.flagCaptures = specificStats.flagCaptures > ms.flagCaptures and specificStats.flagCaptures or ms.flagCaptures
-        ms.flagReturns = specificStats.flagReturns > ms.flagReturns and specificStats.flagReturns or ms.flagReturns
+        ms.flagCaptures.value = specificStats.flagCaptures > ms.flagCaptures.value and specificStats.flagCaptures or ms.flagCaptures.value
+        ms.flagReturns.value = specificStats.flagReturns > ms.flagReturns.value and specificStats.flagReturns or ms.flagReturns.value
     elseif (battlefield == BATTLEFIELD_ARATHI) then
-        ms.basesAssaulted = specificStats.basesAssaulted > ms.basesAssaulted and specificStats.basesAssaulted or ms.basesAssaulted
-        ms.basesDefended = specificStats.basesDefended > ms.basesDefended and specificStats.basesDefended or ms.basesDefended
+        ms.basesAssaulted.value = specificStats.basesAssaulted > ms.basesAssaulted.value and specificStats.basesAssaulted or ms.basesAssaulted.value
+        ms.basesDefended.value = specificStats.basesDefended > ms.basesDefended.value and specificStats.basesDefended or ms.basesDefended.value
     elseif (battlefield == BATTLEFIELD_ALTERAC) then
-        ms.graveyardsAssaulted = specificStats.graveyardsAssaulted > ms.graveyardsAssaulted and specificStats.graveyardsAssaulted or ms.graveyardsAssaulted
-        ms.graveyardsDefended = specificStats.graveyardsDefended > ms.graveyardsDefended and specificStats.graveyardsDefended or ms.graveyardsDefended
-        ms.towersAssaulted = specificStats.towersAssaulted > ms.towersAssaulted and specificStats.towersAssaulted or ms.towersAssaulted
-        ms.towersDefended = specificStats.towersDefended > ms.towersDefended and specificStats.towersDefended or ms.towersDefended
-        ms.minesCaptured = specificStats.minesCaptured > ms.minesCaptured and specificStats.minesCaptured or ms.minesCaptured
-        ms.leadersKilled = specificStats.leadersKilled > ms.leadersKilled and specificStats.leadersKilled or ms.leadersKilled
-        ms.secondaryObjectives = specificStats.secondaryObjectives > ms.secondaryObjectives and specificStats.secondaryObjectives or ms.secondaryObjectives
+        ms.graveyardsAssaulted.value = specificStats.graveyardsAssaulted > ms.graveyardsAssaulted.value and specificStats.graveyardsAssaulted or ms.graveyardsAssaulted.value
+        ms.graveyardsDefended.value = specificStats.graveyardsDefended > ms.graveyardsDefended.value and specificStats.graveyardsDefended or ms.graveyardsDefended.value
+        ms.towersAssaulted.value = specificStats.towersAssaulted > ms.towersAssaulted.value and specificStats.towersAssaulted or ms.towersAssaulted.value
+        ms.towersDefended.value = specificStats.towersDefended > ms.towersDefended.value and specificStats.towersDefended or ms.towersDefended.value
+        ms.minesCaptured.value = specificStats.minesCaptured > ms.minesCaptured.value and specificStats.minesCaptured or ms.minesCaptured.value
+        ms.leadersKilled.value = specificStats.leadersKilled > ms.leadersKilled.value and specificStats.leadersKilled or ms.leadersKilled.value
+        ms.secondaryObjectives.value = specificStats.secondaryObjectives > ms.secondaryObjectives.value and specificStats.secondaryObjectives or ms.secondaryObjectives.value
     end
 end
 
@@ -314,61 +229,136 @@ end
 
 function Statsy:PrintReport()
     print(COLOR_RED .. "Statsy report:")
-    print("---")
 
-    local stats = self.db.char.stats
+    local stats = Utils:DeepCopy(self.db.char.stats)
+    self:CalcSumStats(stats)
+
+    -- Общая статистика со всех БГ
+    local tscFields = {"games", "wins", "losses", "winRate", "commonStats"}
+    self:PrintModelBattlefieldReport(L["GUI_TOTAL_COMMONSTATS"], BATTLEFIELD_NONE, stats, tscFields)
+
+    -- Максимальная статистика со всех БГ
+    local tmsFields = {"maxStats"}
+    self:PrintModelBattlefieldReport(L["GUI_TOTAL_MAXSTATS"], BATTLEFIELD_NONE, stats, tmsFields)
+
+    -- Общая статистика на "Ущелье Песни Войны"
+    local wcsFields = {"games", "wins", "losses", "winRate", "commonStats"}
+    local wcsTitle = string.format(L["GUI_BATTLEFIELD_COMMONSTATS"], L["SYSTEM_BATTLEFIELD_WARSONG"])
+    self:PrintModelBattlefieldReport(wcsTitle, BATTLEFIELD_WARSONG, stats, wcsFields)
+
+    -- Максимальная статистика на "Ущелье Песни Войны"
+    local wmsFields = {"maxStats"}
+    local wmsTitle = string.format(L["GUI_BATTLEFIELD_MAXSTATS"], L["SYSTEM_BATTLEFIELD_WARSONG"])
+    self:PrintModelBattlefieldReport(wmsTitle, BATTLEFIELD_WARSONG, stats, wmsFields)
+
+    -- Общая статистика на "Низина Арати"
+    local abcsFields = {"games", "wins", "losses", "winRate", "commonStats"}
+    local abcsTitle = string.format(L["GUI_BATTLEFIELD_COMMONSTATS"], L["SYSTEM_BATTLEFIELD_ARATHI"])
+    self:PrintModelBattlefieldReport(abcsTitle, BATTLEFIELD_ARATHI, stats, abcsFields)
+
+    -- Максимальная статистика на "Низина Арати"
+    local abmsFields = {"maxStats"}
+    local abmsTitle = string.format(L["GUI_BATTLEFIELD_MAXSTATS"], L["SYSTEM_BATTLEFIELD_ARATHI"])
+    self:PrintModelBattlefieldReport(abmsTitle, BATTLEFIELD_ARATHI, stats, abmsFields)
+
+    -- Общая статистика на "Альтеракская Долина"
+    local avcsFields = {"games", "wins", "losses", "winRate", "commonStats"}
+    local avcsTitle = string.format(L["GUI_BATTLEFIELD_COMMONSTATS"], L["SYSTEM_BATTLEFIELD_ALTERAC"])
+    self:PrintModelBattlefieldReport(avcsTitle, BATTLEFIELD_ALTERAC, stats, avcsFields)
+
+    -- Максимальная статистика на "Альтеракская Долина"
+    local avmsFields = {"maxStats"}
+    local avmsTitle = string.format(L["GUI_BATTLEFIELD_MAXSTATS"], L["SYSTEM_BATTLEFIELD_ALTERAC"])
+    self:PrintModelBattlefieldReport(avmsTitle, BATTLEFIELD_ALTERAC, stats, avmsFields)
+end
+
+function Statsy:CalcSumStats(stats)
     local sumGames, sumWins, sumLosses, sumWinRate = 0, 0, 0, 0
     local sumKillingBlows, sumDeaths, sumHonorableKills = 0, 0, 0
+    local maxKillingBlows, maxDeaths, maxHonorableKills = 0, 0, 0
 
     for i = 1, #ALL_BATTLEFIELDS do
         local battlefield = ALL_BATTLEFIELDS[i]
-        local bfName = self:GetBattlefieldName(battlefield)
+
         local bfStats = stats[battlefield]
-        local bfGames = bfStats.wins + bfStats.losses
-        local bfWinRate = bfGames == 0 and 0 or (bfStats.wins * 100 / bfGames)
+        local bfGames = bfStats.wins.value + bfStats.losses.value
+        local bfWinRate = bfGames == 0 and 0 or (bfStats.wins.value * 100 / bfGames)
 
-        print("[".. bfName .. "] Games: " .. bfGames .. ", Wins: " .. bfStats.wins .. ", Losses: " .. bfStats.losses .. ", WinRate: " .. string.format("%0.2f", bfWinRate) .. "%")
-
-        local bfCs = bfStats.commonStats
-        local bfMs = bfStats.maxStats
-        print("[".. bfName .. "] Killing Blows: " .. bfCs.killingBlows .. ", Deaths: " .. bfCs.deaths .. ", Honorable Kills: " .. bfCs.honorableKills)
-        print("[".. bfName .. "] Max Killing Blows: " .. bfMs.killingBlows .. ", Max Honorable Kills: " .. bfMs.honorableKills)
-
-        if (battlefield == BATTLEFIELD_WARSONG) then
-            print("[".. bfName .. "] Flag Captures: " .. bfCs.flagCaptures .. ", Flag Returns: " .. bfCs.flagReturns)
-            print("[".. bfName .. "] Max Flag Captures: " .. bfMs.flagCaptures .. ", Max Flag Returns: " .. bfMs.flagReturns)
-        elseif (battlefield == BATTLEFIELD_ARATHI) then
-            print("[".. bfName .. "] Bases Assaulted: " .. bfCs.basesAssaulted .. ", Bases Defended: " .. bfCs.basesDefended)
-            print("[".. bfName .. "] Max Bases Assaulted: " .. bfMs.basesAssaulted .. ", Max Bases Defended: " .. bfMs.basesDefended)
-        elseif (battlefield == BATTLEFIELD_ALTERAC) then
-            print("[".. bfName .. "] Graveyards Assaulted: " .. bfCs.graveyardsAssaulted .. ", Graveyards Defended: " .. bfCs.graveyardsDefended .. ", Towers Assaulted: " .. bfCs.towersAssaulted .. ", Towers Defended: " .. bfCs.towersDefended .. ", Mines Captured: " .. bfCs.minesCaptured .. ", Leaders Killed: " .. bfCs.leadersKilled .. ", Secondary Objectives: " .. bfCs.secondaryObjectives)
-            print("[".. bfName .. "] Max Graveyards Assaulted: " .. bfMs.graveyardsAssaulted .. ", Max Graveyards Defended: " .. bfMs.graveyardsDefended .. ", Max Towers Assaulted: " .. bfMs.towersAssaulted .. ", Max Towers Defended: " .. bfMs.towersDefended .. ", Max Mines Captured: " .. bfMs.minesCaptured .. ", Max Leaders Killed: " .. bfMs.leadersKilled .. ", Max Secondary Objectives: " .. bfMs.secondaryObjectives)
-        end
+        bfStats.games.value = bfGames
+        bfStats.winRate.value = Utils:PercentFormat(bfWinRate)
 
         sumGames = sumGames + bfGames
-        sumWins = sumWins + bfStats.wins
-        sumLosses = sumLosses + bfStats.losses
+        sumWins = sumWins + bfStats.wins.value
+        sumLosses = sumLosses + bfStats.losses.value
 
-        sumKillingBlows = sumKillingBlows + bfCs.killingBlows
-        sumDeaths = sumDeaths + bfCs.deaths
-        sumHonorableKills = sumHonorableKills + bfCs.honorableKills
+        local bfCs = bfStats.commonStats
+        sumKillingBlows = sumKillingBlows + bfCs.killingBlows.value
+        sumDeaths = sumDeaths + bfCs.deaths.value
+        sumHonorableKills = sumHonorableKills + bfCs.honorableKills.value
 
-        print("---")
+        local bfMs = bfStats.maxStats
+        maxKillingBlows = maxKillingBlows >= bfMs.killingBlows.value and maxKillingBlows or bfMs.killingBlows.value
+        maxDeaths = maxDeaths >= bfMs.deaths.value and maxDeaths or bfMs.deaths.value
+        maxHonorableKills = maxHonorableKills >= bfMs.honorableKills.value and maxHonorableKills or bfMs.honorableKills.value
     end
     
     sumWinRate = sumGames == 0 and 0 or (sumWins * 100 / sumGames)
-    print("[Total] Games: " .. sumGames .. ", Wins: " .. sumWins .. ", Losses: " .. sumLosses .. ", WinRate: " .. string.format("%0.2f", sumWinRate) .. "%")
-    print("[Total] Killing Blows: " .. sumKillingBlows .. ", Deaths: " .. sumDeaths .. ", Honorable Kills: " .. sumHonorableKills)
+
+    local totalStats = stats[BATTLEFIELD_NONE]
+    totalStats.games.value = sumGames
+    totalStats.wins.value = sumWins
+    totalStats.losses.value = sumLosses
+    totalStats.winRate.value = Utils:PercentFormat(sumWinRate)
+
+    local tsCs = totalStats.commonStats
+    tsCs.killingBlows.value = sumKillingBlows
+    tsCs.deaths.value = sumDeaths
+    tsCs.honorableKills.value = sumHonorableKills
+
+    local tsMs = totalStats.maxStats
+    tsMs.killingBlows.value = maxKillingBlows
+    tsMs.deaths.value = maxDeaths
+    tsMs.honorableKills.value = maxHonorableKills
 end
 
-function Statsy:ToggleMakeConfirmScreenshot()
-    self.db.profile.makeConfirmScreenshots = not self.db.profile.makeConfirmScreenshots
-    print("MakeConfirmScreenshots: " .. tostring(self.db.profile.makeConfirmScreenshots))
+function Statsy:PrintModelBattlefieldReport(title, battlefield, stats, fields)
+    local propReports = {}
+    local bfStats = stats[battlefield]
+    local props = Utils:GetParentPropertiesFromArray(bfStats, fields)
+    for i = 1, #props do
+        local p = props[i]
+        local propReport = self:GetModelFieldReport(bfStats, p)
+        if (propReport ~= nil) then
+            table.insert(propReports, propReport)
+        end
+    end
+
+    if (#propReports == 0) then
+        return
+    end
+
+    print(COLOR_BLUE .. "[" .. title .. "]:")
+    for i = 1, #propReports do
+        print(propReports[i])
+    end
+end
+
+function Statsy:GetModelFieldReport(bfStats, path)
+    local pathArray = Utils:Split(path, ".")
+    local localeId = pathArray[#pathArray]
+    local locale = "STATS_" .. string.upper(localeId)
+    local modelPart = Utils:GetPropByPathArray(bfStats, pathArray)
+
+    if (modelPart ~= null and modelPart.report) then
+        return L[locale] .. ": " .. modelPart.value
+    else
+        return nil
+    end
 end
 
 function Statsy:MakeConfirmScreenshot()
     if (self.db.profile.makeConfirmScreenshots) then
-        print("MakeConfirmScreenshot")
+        self:PrintMessage("MakeConfirmScreenshot")
         Screenshot()
     end
 end
@@ -395,21 +385,22 @@ end
 
 function Statsy:GetBattlefieldId()
     local name, typeName, difficultyIndex, difficultyName, maxPlayers, dynamicDifficulty, isDynamic, instanceMapId, lfgID = GetInstanceInfo()
-    if self:Contains(ALL_BATTLEFIELDS, instanceMapId) then
+    if Utils:Contains(ALL_BATTLEFIELDS, instanceMapId) then
         return instanceMapId
     else
         return BATTLEFIELD_NONE
     end
 end
 
---TODO: Подумать как избавиться от этого
-function Statsy:GetBattlefieldName(battlefieldId)
-    if (battlefieldId == BATTLEFIELD_WARSONG) then
-        return "Warsong"
+function Statsy:GetBattlefieldGroupName(battlefieldId)
+    if (battlefieldId == BATTLEFIELD_NONE) then
+        return L["GUI_TOTAL_COMMONSTATS_SHORT"]
+    elseif (battlefieldId == BATTLEFIELD_WARSONG) then
+        return L["SYSTEM_BATTLEFIELD_WARSONG"]
     elseif (battlefieldId == BATTLEFIELD_ARATHI) then
-        return "Arathi"
+        return L["SYSTEM_BATTLEFIELD_ARATHI"]
     elseif (battlefieldId == BATTLEFIELD_ALTERAC) then
-        return "Alterac"
+        return L["SYSTEM_BATTLEFIELD_ALTERAC"]
     else
         return nil
     end
@@ -434,12 +425,9 @@ function Statsy:GetPlayerFaction()
     return UnitFactionGroup("player")
 end
 
--- TODO: Вынести в Utils
-function Statsy:Contains(tab, val)
-    for k, v in ipairs(tab) do
-        if v == val then
-            return true
-        end
+function Statsy:PrintMessage(msg)
+    if not self.db.profile.debugMessages then
+        return
     end
-    return false
+    print(msg)
 end
