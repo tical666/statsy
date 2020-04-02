@@ -56,43 +56,44 @@ function GUI:OptionsFrameCreate()
         end)
     commonContainer:AddChild(cbDm)
 
+    -- TODO: Отрефакторить и сделать по аналогии с кодом из Statsy
     -- Общая статистика со всех БГ
     local tscFields = {"games", "wins", "losses", "winRate", "commonStats"}
-    self:CreateModelCheckboxGroup(scrollContainer, L["GUI_TOTAL_COMMONSTATS"], BATTLEFIELD_NONE, tscFields)
+    self:CreateModelCheckboxGroup(scrollContainer, L["GUI_TOTAL_COMMONSTATS"], BATTLEFIELD_NONE, tscFields, true)
 
     -- Максимальная статистика со всех БГ
     local tmsFields = {"maxStats"}
-    self:CreateModelCheckboxGroup(scrollContainer, L["GUI_TOTAL_MAXSTATS"], BATTLEFIELD_NONE, tmsFields)
+    self:CreateModelCheckboxGroup(scrollContainer, L["GUI_TOTAL_MAXSTATS"], BATTLEFIELD_NONE, tmsFields, false)
 
     -- Общая статистика на "Ущелье Песни Войны"
     local wcsFields = {"games", "wins", "losses", "winRate", "commonStats"}
     local wcsTitle = string.format(L["GUI_BATTLEFIELD_COMMONSTATS"], L["SYSTEM_BATTLEFIELD_WARSONG"])
-    self:CreateModelCheckboxGroup(scrollContainer, wcsTitle, BATTLEFIELD_WARSONG, wcsFields)
+    self:CreateModelCheckboxGroup(scrollContainer, wcsTitle, BATTLEFIELD_WARSONG, wcsFields, true)
 
     -- Максимальная статистика на "Ущелье Песни Войны"
     local wmsFields = {"maxStats"}
     local wmsTitle = string.format(L["GUI_BATTLEFIELD_MAXSTATS"], L["SYSTEM_BATTLEFIELD_WARSONG"])
-    self:CreateModelCheckboxGroup(scrollContainer, wmsTitle, BATTLEFIELD_WARSONG, wmsFields)
+    self:CreateModelCheckboxGroup(scrollContainer, wmsTitle, BATTLEFIELD_WARSONG, wmsFields, false)
 
     -- Общая статистика на "Низина Арати"
     local abcsFields = {"games", "wins", "losses", "winRate", "commonStats"}
     local abcsTitle = string.format(L["GUI_BATTLEFIELD_COMMONSTATS"], L["SYSTEM_BATTLEFIELD_ARATHI"])
-    self:CreateModelCheckboxGroup(scrollContainer, abcsTitle, BATTLEFIELD_ARATHI, abcsFields)
+    self:CreateModelCheckboxGroup(scrollContainer, abcsTitle, BATTLEFIELD_ARATHI, abcsFields, true)
 
     -- Максимальная статистика на "Низина Арати"
     local abmsFields = {"maxStats"}
     local abmsTitle = string.format(L["GUI_BATTLEFIELD_MAXSTATS"], L["SYSTEM_BATTLEFIELD_ARATHI"])
-    self:CreateModelCheckboxGroup(scrollContainer, abmsTitle, BATTLEFIELD_ARATHI, abmsFields)
+    self:CreateModelCheckboxGroup(scrollContainer, abmsTitle, BATTLEFIELD_ARATHI, abmsFields, false)
 
     -- Общая статистика на "Альтеракская Долина"
     local avcsFields = {"games", "wins", "losses", "winRate", "commonStats"}
     local avcsTitle = string.format(L["GUI_BATTLEFIELD_COMMONSTATS"], L["SYSTEM_BATTLEFIELD_ALTERAC"])
-    self:CreateModelCheckboxGroup(scrollContainer, avcsTitle, BATTLEFIELD_ALTERAC, avcsFields)
+    self:CreateModelCheckboxGroup(scrollContainer, avcsTitle, BATTLEFIELD_ALTERAC, avcsFields, true)
 
     -- Максимальная статистика на "Альтеракская Долина"
     local avmsFields = {"maxStats"}
     local avmsTitle = string.format(L["GUI_BATTLEFIELD_MAXSTATS"], L["SYSTEM_BATTLEFIELD_ALTERAC"])
-    self:CreateModelCheckboxGroup(scrollContainer, avmsTitle, BATTLEFIELD_ALTERAC, avmsFields)
+    self:CreateModelCheckboxGroup(scrollContainer, avmsTitle, BATTLEFIELD_ALTERAC, avmsFields, false)
 
     -- Label для фикса ошибки когда не вмещается всё содержимое
     local fixLb = AceGUI:Create("Label")
@@ -101,13 +102,15 @@ function GUI:OptionsFrameCreate()
     self.optionsFrame = frame
 end
 
-function GUI:CreateModelCheckboxGroup(container, text, battlefield, fields)
+function GUI:CreateModelCheckboxGroup(container, text, battlefield, fields, isCommon)
     local props = Utils:GetParentPropertiesFromArray(self.db.char.stats[battlefield], fields)
     local c = self:CreateModelContainer(container, text)
     for i = 1, #props do
         local p = props[i]
         self:CreateModelCheckBox(c, battlefield, p)
     end
+
+    self:CreateButtonsGroup(c, battlefield, isCommon)
 end
 
 function GUI:CreateModelContainer(container, text)
@@ -129,12 +132,42 @@ function GUI:CreateModelCheckBox(container, battlefield, path)
     local cb = AceGUI:Create("CheckBox")
     cb:SetLabel(L[locale])
     cb:SetValue(modelPart.report)
-    cb:SetWidth(250)
+    cb:SetWidth(200)
     cb:SetCallback("OnValueChanged",
         function(arg1, arg2, value)
             modelPart.report = value
         end)
     container:AddChild(cb)
+end
+
+function GUI:CreateButtonsGroup(container, battlefield, isCommon)
+    local btnsGroup = AceGUI:Create("SimpleGroup")
+    btnsGroup:SetLayout("Flow")
+    btnsGroup:SetFullWidth(true)
+    container:AddChild(btnsGroup)
+
+    local sayBtn = AceGUI:Create("Button")
+    sayBtn:SetText(L["GUI_SEND_SAY"])
+    sayBtn:SetCallback("OnClick", function()
+        Statsy:PrintStatsMessage(battlefield, isCommon, nil, CHAT_SAY)
+    end)
+    btnsGroup:AddChild(sayBtn)
+
+    local partyBtn = AceGUI:Create("Button")
+    partyBtn:SetText(L["GUI_SEND_PARTY"])
+    partyBtn:SetCallback("OnClick",
+        function()
+            Statsy:PrintStatsMessage(battlefield, isCommon, nil, CHAT_PARTY)
+        end)
+    btnsGroup:AddChild(partyBtn)
+
+    local guildBtn = AceGUI:Create("Button")
+    guildBtn:SetText(L["GUI_SEND_GUILD"])
+    guildBtn:SetCallback("OnClick",
+        function()
+            Statsy:PrintStatsMessage(battlefield, isCommon, nil, CHAT_GUILD)
+        end)
+    btnsGroup:AddChild(guildBtn)
 end
 
 function GUI:SetMakeConfirmScreenshots(value)

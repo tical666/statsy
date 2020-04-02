@@ -57,7 +57,7 @@ function Statsy:UPDATE_BATTLEFIELD_STATUS()
                 self:PrintMessage("UPDATE_BATTLEFIELD_STATUS: None")
             elseif (status == "confirm") then
                 -- TODO: Сделать опциональное уведомление в личку о старте?
-                self:SendGroupMessage("Statsy: BG Confirmed '" .. mapName .. "'")
+                self:SendPartyMessage("Statsy: BG Confirmed '" .. mapName .. "'")
                 self:MakeConfirmScreenshot()
             elseif (status == "active") then
                 self:PrintMessage("UPDATE_BATTLEFIELD_STATUS: BG Active '" .. mapName .. "'")
@@ -230,46 +230,53 @@ end
 function Statsy:PrintReport()
     print(COLOR_RED .. "Statsy report:")
 
-    local stats = Utils:DeepCopy(self.db.char.stats)
-    self:CalcSumStats(stats)
+    local stats = self:GetStatsCopy()
 
     -- Общая статистика со всех БГ
-    local tscFields = {"games", "wins", "losses", "winRate", "commonStats"}
-    self:PrintModelBattlefieldReport(L["GUI_TOTAL_COMMONSTATS"], BATTLEFIELD_NONE, stats, tscFields)
-
+    self:PrintStatsMessage(BATTLEFIELD_NONE, true, stats, CHAT_PRINT)
     -- Максимальная статистика со всех БГ
-    local tmsFields = {"maxStats"}
-    self:PrintModelBattlefieldReport(L["GUI_TOTAL_MAXSTATS"], BATTLEFIELD_NONE, stats, tmsFields)
-
+    self:PrintStatsMessage(BATTLEFIELD_NONE, false, stats, CHAT_PRINT)
     -- Общая статистика на "Ущелье Песни Войны"
-    local wcsFields = {"games", "wins", "losses", "winRate", "commonStats"}
-    local wcsTitle = string.format(L["GUI_BATTLEFIELD_COMMONSTATS"], L["SYSTEM_BATTLEFIELD_WARSONG"])
-    self:PrintModelBattlefieldReport(wcsTitle, BATTLEFIELD_WARSONG, stats, wcsFields)
-
+    self:PrintStatsMessage(BATTLEFIELD_WARSONG, true, stats, CHAT_PRINT)
     -- Максимальная статистика на "Ущелье Песни Войны"
-    local wmsFields = {"maxStats"}
-    local wmsTitle = string.format(L["GUI_BATTLEFIELD_MAXSTATS"], L["SYSTEM_BATTLEFIELD_WARSONG"])
-    self:PrintModelBattlefieldReport(wmsTitle, BATTLEFIELD_WARSONG, stats, wmsFields)
-
+    self:PrintStatsMessage(BATTLEFIELD_WARSONG, false, stats, CHAT_PRINT)
     -- Общая статистика на "Низина Арати"
-    local abcsFields = {"games", "wins", "losses", "winRate", "commonStats"}
-    local abcsTitle = string.format(L["GUI_BATTLEFIELD_COMMONSTATS"], L["SYSTEM_BATTLEFIELD_ARATHI"])
-    self:PrintModelBattlefieldReport(abcsTitle, BATTLEFIELD_ARATHI, stats, abcsFields)
-
+    self:PrintStatsMessage(BATTLEFIELD_ARATHI, true, stats, CHAT_PRINT)
     -- Максимальная статистика на "Низина Арати"
-    local abmsFields = {"maxStats"}
-    local abmsTitle = string.format(L["GUI_BATTLEFIELD_MAXSTATS"], L["SYSTEM_BATTLEFIELD_ARATHI"])
-    self:PrintModelBattlefieldReport(abmsTitle, BATTLEFIELD_ARATHI, stats, abmsFields)
-
+    self:PrintStatsMessage(BATTLEFIELD_ARATHI, false, stats, CHAT_PRINT)
     -- Общая статистика на "Альтеракская Долина"
-    local avcsFields = {"games", "wins", "losses", "winRate", "commonStats"}
-    local avcsTitle = string.format(L["GUI_BATTLEFIELD_COMMONSTATS"], L["SYSTEM_BATTLEFIELD_ALTERAC"])
-    self:PrintModelBattlefieldReport(avcsTitle, BATTLEFIELD_ALTERAC, stats, avcsFields)
-
+    self:PrintStatsMessage(BATTLEFIELD_ALTERAC, true, stats, CHAT_PRINT)
     -- Максимальная статистика на "Альтеракская Долина"
-    local avmsFields = {"maxStats"}
-    local avmsTitle = string.format(L["GUI_BATTLEFIELD_MAXSTATS"], L["SYSTEM_BATTLEFIELD_ALTERAC"])
-    self:PrintModelBattlefieldReport(avmsTitle, BATTLEFIELD_ALTERAC, stats, avmsFields)
+    self:PrintStatsMessage(BATTLEFIELD_ALTERAC, false, stats, CHAT_PRINT)
+end
+
+function Statsy:PrintStatsMessage(battlefield, isCommon, stats, chatType)
+    local fields
+    if isCommon then
+        fields = {"games", "wins", "losses", "winRate", "commonStats"}
+    else
+        fields = {"maxStats"}
+    end
+
+    local title
+    if (battlefield == BATTLEFIELD_NONE) then
+        title = isCommon and L["GUI_TOTAL_COMMONSTATS"] or L["GUI_TOTAL_MAXSTATS"]
+    elseif (battlefield == BATTLEFIELD_WARSONG) then
+        title = isCommon and L["GUI_BATTLEFIELD_COMMONSTATS"] or L["GUI_BATTLEFIELD_MAXSTATS"]
+        title = string.format(title, L["SYSTEM_BATTLEFIELD_WARSONG"])
+    elseif (battlefield == BATTLEFIELD_ARATHI) then
+        title = isCommon and L["GUI_BATTLEFIELD_COMMONSTATS"] or L["GUI_BATTLEFIELD_MAXSTATS"]
+        title = string.format(title, L["SYSTEM_BATTLEFIELD_ARATHI"])
+    elseif (battlefield == BATTLEFIELD_ALTERAC) then
+        title = isCommon and L["GUI_BATTLEFIELD_COMMONSTATS"] or L["GUI_BATTLEFIELD_MAXSTATS"]
+        title = string.format(title, L["SYSTEM_BATTLEFIELD_ALTERAC"])
+    end
+
+    if (stats == nil) then
+        stats = self:GetStatsCopy()
+    end
+
+    self:PrintModelBattlefieldReport(title, battlefield, stats, fields, chatType)
 end
 
 function Statsy:CalcSumStats(stats)
@@ -321,7 +328,7 @@ function Statsy:CalcSumStats(stats)
     tsMs.honorableKills.value = maxHonorableKills
 end
 
-function Statsy:PrintModelBattlefieldReport(title, battlefield, stats, fields)
+function Statsy:PrintModelBattlefieldReport(title, battlefield, stats, fields, chatType)
     local propReports = {}
     local bfStats = stats[battlefield]
     local props = Utils:GetParentPropertiesFromArray(bfStats, fields)
@@ -337,9 +344,14 @@ function Statsy:PrintModelBattlefieldReport(title, battlefield, stats, fields)
         return
     end
 
-    print(COLOR_BLUE .. "[" .. title .. "]:")
+    local msg = "[Statsy - " .. title .. "]:"
+    if chatType == CHAT_PRINT then
+        msg = COLOR_BLUE .. msg
+    end
+    self:SendTypedMessage(msg, chatType)
     for i = 1, #propReports do
-        print(propReports[i])
+        local propReport = propReports[i]
+        self:SendTypedMessage(propReport, chatType)
     end
 end
 
@@ -367,7 +379,19 @@ function Statsy:PrintLoadMessage()
     print(COLOR_RED .. "Statsy: Loaded")
 end
 
-function Statsy:SendGroupMessage(msg)
+function Statsy:SendTypedMessage(msg, chatType)
+    if chatType == CHAT_PRINT then
+        print(msg)
+    elseif chatType == CHAT_SAY then
+        SendChatMessage(msg , "SAY")
+    elseif chatType == CHAT_PARTY then
+        self:SendPartyMessage(msg)
+    elseif chatType == CHAT_GUILD then
+        SendChatMessage(msg , "GUILD")
+    end
+end
+
+function Statsy:SendPartyMessage(msg)
     local chatType = nil
     if (UnitInBattleground("player") ~= nil) then
         chatType = "INSTANCE_CHAT"
@@ -381,6 +405,12 @@ function Statsy:SendGroupMessage(msg)
     else
         print(msg)
     end
+end
+
+function Statsy:GetStatsCopy()
+    local stats = Utils:DeepCopy(self.db.char.stats)
+    self:CalcSumStats(stats)
+    return stats
 end
 
 function Statsy:GetBattlefieldId()

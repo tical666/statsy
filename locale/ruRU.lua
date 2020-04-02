@@ -16,6 +16,9 @@ L["GUI_TOTAL_COMMONSTATS"] = "Общая статистика со всех БГ
 L["GUI_TOTAL_MAXSTATS"] = "Максимальная статистика со всех БГ"
 L["GUI_BATTLEFIELD_COMMONSTATS"] = "Общая статистика на %q"
 L["GUI_BATTLEFIELD_MAXSTATS"] = "Максимальная статистика на %q"
+L["GUI_SEND_SAY"] = "В чат"
+L["GUI_SEND_PARTY"] = "В группу"
+L["GUI_SEND_GUILD"] = "В гильдию"
 
 L["STATS_GAMES"] = "Игры"
 L["STATS_WINS"] = "Победы"
