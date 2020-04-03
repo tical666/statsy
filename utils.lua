@@ -76,5 +76,5 @@ function Utils:DeepCopy(orig)
 end
 
 function Utils:PercentFormat(value)
-    return string.format("%0.2f", value) .. "%"
+    return string.format("%0.0f", value) .. "%"
 end

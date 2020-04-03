@@ -1,7 +1,7 @@
 ## Interface: 11304
 ## Title: Statsy
 ## Author: Лайф
-## Version: 0.4
+## Version: 0.5
 ## SavedVariables: StatsyDB
 ## OptionalDeps: LibStub, Ace3
 
@@ -14,3 +14,4 @@ utils.lua
 statsy.lua
 minimap.lua
 gui.lua
+info.lua

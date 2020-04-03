@@ -461,3 +461,15 @@ function Statsy:PrintMessage(msg)
     end
     print(msg)
 end
+
+function Statsy:GetWinsLosses()
+    local stats = self:GetStatsCopy()
+    local totalStats = stats[BATTLEFIELD_NONE]
+    return totalStats.wins.value, totalStats.losses.value, totalStats.winRate.value
+end
+
+function Statsy:GetPlayerPVPRankInfo()
+    local rankId = UnitPVPRank("player")
+    local rankName, rankNumber = GetPVPRankInfo(rankId)
+    return rankName, rankNumber
+end
