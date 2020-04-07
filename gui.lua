@@ -46,6 +46,16 @@ function GUI:OptionsFrameCreate()
         end)
     commonContainer:AddChild(cbMcs)
 
+    local cbScw = AceGUI:Create("CheckBox")
+    cbScw:SetLabel(L["GUI_SEND_CONFIRM_WHISPER"])
+    cbScw:SetValue(self.db.profile.sendConfirmWhisper)
+    cbScw:SetWidth(250)
+    cbScw:SetCallback("OnValueChanged",
+        function(arg1, arg2, value)
+            self:SetSendConfirmWhisper(value)
+        end)
+    commonContainer:AddChild(cbScw)
+
     local cbDm = AceGUI:Create("CheckBox")
     cbDm:SetLabel(L["GUI_DEBUG_MESSAGES"])
     cbDm:SetValue(self.db.profile.debugMessages)
@@ -149,7 +159,7 @@ function GUI:CreateButtonsGroup(container, battlefield, isCommon)
     local sayBtn = AceGUI:Create("Button")
     sayBtn:SetText(L["GUI_SEND_SAY"])
     sayBtn:SetCallback("OnClick", function()
-        Statsy:PrintStatsMessage(battlefield, isCommon, nil, CHAT_SAY)
+        Statsy:PrintGroupReport(battlefield, isCommon, CHAT_SAY)
     end)
     btnsGroup:AddChild(sayBtn)
 
@@ -157,7 +167,7 @@ function GUI:CreateButtonsGroup(container, battlefield, isCommon)
     partyBtn:SetText(L["GUI_SEND_PARTY"])
     partyBtn:SetCallback("OnClick",
         function()
-            Statsy:PrintStatsMessage(battlefield, isCommon, nil, CHAT_PARTY)
+            Statsy:PrintGroupReport(battlefield, isCommon, CHAT_PARTY)
         end)
     btnsGroup:AddChild(partyBtn)
 
@@ -165,13 +175,17 @@ function GUI:CreateButtonsGroup(container, battlefield, isCommon)
     guildBtn:SetText(L["GUI_SEND_GUILD"])
     guildBtn:SetCallback("OnClick",
         function()
-            Statsy:PrintStatsMessage(battlefield, isCommon, nil, CHAT_GUILD)
+            Statsy:PrintGroupReport(battlefield, isCommon, CHAT_GUILD)
         end)
     btnsGroup:AddChild(guildBtn)
 end
 
 function GUI:SetMakeConfirmScreenshots(value)
     self.db.profile.makeConfirmScreenshots = value
+end
+
+function GUI:SetSendConfirmWhisper(value)
+    self.db.profile.sendConfirmWhisper = value
 end
 
 function GUI:SetDebugMessages(value)

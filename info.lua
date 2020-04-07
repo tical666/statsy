@@ -1,16 +1,30 @@
 local LDB = LibStub:GetLibrary("LibDataBroker-1.1")
 
-local StatsyInfo = LDB:NewDataObject("Statsy Info", {
+Statsy.StatsyInfo = LDB:NewDataObject("Statsy Info", {
 	type = "data source",
 	icon = "Interface\\Icons\\ability_marksmanship",
-	text = "",
-	updatePeriod = 300,	--TODO: Переделать функционал по обновлению на событие окончания игр
-	elapsed = 300
+	text = ""
 })
 
+local StatsyInfo = Statsy.StatsyInfo
+
 function StatsyInfo:OnTooltipShow()
-	local rankName, rankNumber = Statsy:GetPlayerPVPRankInfo()
-	self:AddLine(rankName .. " " .. rankNumber)
+	self:AddLine(COLOR_RED .. "Statsy")
+
+	local report = Statsy:CreateReport()
+    for g, group in ipairs(report) do
+		if (#group.elements > 0) then
+			self:AddLine(" ")	-- Пустая строка для отступа
+            --TODO: Подумать как переделать
+            local groupMsg = COLOR_BLUE .. "[" .. group.title .. "]:"
+			self:AddLine(groupMsg)
+
+            for e, element in ipairs(group.elements) do
+                local elementMsg = element.title .. ": " .. element.value
+				self:AddLine(elementMsg)
+			end
+        end
+    end
 end
 
 function StatsyInfo:OnEnter()
@@ -25,22 +39,11 @@ function StatsyInfo:OnLeave()
 	GameTooltip:Hide()
 end
 
-function StatsyInfo:CreateFrame()
-	local frame = CreateFrame("frame")
-	frame:SetScript("OnUpdate", function(self, elapse)
-		StatsyInfo.elapsed = StatsyInfo.elapsed + elapse
-		if StatsyInfo.elapsed < StatsyInfo.updatePeriod then
-			return
-		end
+function StatsyInfo:Update()
+	local wins, losses, winRate = Statsy:GetWinsLosses()
+	StatsyInfo.text = string.format(COLOR_GREEN .. "W:%d " .. COLOR_RED .. "L:%d " .. COLOR_YELLOW .. "WR:%s", wins, losses, winRate)
 
-		StatsyInfo.elapsed = 0
-		local wins, losses, winRate = Statsy:GetWinsLosses()
-		StatsyInfo.text = string.format(COLOR_GREEN .. "W:%d " .. COLOR_RED .. "L:%d " .. COLOR_YELLOW .. "WR:%s", wins, losses, winRate)
-
-		local rankName, rankNumber = Statsy:GetPlayerPVPRankInfo()
-		local rankNumberStr = rankNumber >= 10 and rankNumber or ("0" .. rankNumber)
-		StatsyInfo.icon = "Interface\\PvPRankBadges\\PvPRank" .. rankNumberStr
-	end)
+	local rankName, rankNumber = Statsy:GetPlayerPVPRankInfo()
+	local rankNumberStr = rankNumber >= 10 and rankNumber or ("0" .. rankNumber)
+	StatsyInfo.icon = "Interface\\PvPRankBadges\\PvPRank" .. rankNumberStr
 end
-
-StatsyInfo:CreateFrame()

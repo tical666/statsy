@@ -1,9 +1,10 @@
-Statsy = LibStub("AceAddon-3.0"):NewAddon("Statsy", "AceConsole-3.0", "AceEvent-3.0", "AceTimer-3.0")
+Statsy = LibStub("AceAddon-3.0"):NewAddon("Statsy", "AceConsole-3.0", "AceEvent-3.0", "AceTimer-3.0", "AceHook-3.0")
 L = LibStub("AceLocale-3.0"):GetLocale("Statsy")
 
 function Statsy:OnInitialize()
     self:InitDB()
     self:Init()
+    self.StatsyInfo:Update()  --TODO: переделать
 end
 
 function Statsy:InitDB()
@@ -15,6 +16,7 @@ function Statsy:Init()
     self.playerName = self:GetPlayerName()
     self.playerFaction = self:GetPlayerFaction() == "Alliance" and FACTION_ALIANCE or FACTION_HORDE
     self.currentBattlefieldId = BATTLEFIELD_NONE
+    self.lastBattlefieldStatus = {}
 
     self:SendMessage("GUI", "InitDB", self.db)
     self:SendMessage("MINIMAP", "InitDB", self.db)
@@ -31,9 +33,10 @@ function Statsy:OnEnable()
     self:PrintLoadMessage()
     self:RegisterEvent("UPDATE_BATTLEFIELD_STATUS")
     --self:RegisterEvent("UPDATE_BATTLEFIELD_SCORE")
-    self:RegisterEvent("CHAT_MSG_BG_SYSTEM_HORDE")
-    self:RegisterEvent("CHAT_MSG_BG_SYSTEM_ALLIANCE")
-    self:RegisterEvent("CHAT_MSG_BG_SYSTEM_NEUTRAL")
+    --self:RegisterEvent("CHAT_MSG_BG_SYSTEM_HORDE")
+    --self:RegisterEvent("CHAT_MSG_BG_SYSTEM_ALLIANCE")
+    --self:RegisterEvent("CHAT_MSG_BG_SYSTEM_NEUTRAL")
+
     self:RegisterChatCommand("statsy", "SLASHCOMMAND_STATSY")
     self:RegisterMessage("STATSY", "MESSAGE_HANDLER")
 end
@@ -47,20 +50,21 @@ function Statsy:UPDATE_BATTLEFIELD_STATUS()
         local battlefield = self:GetBattlefieldId()
         if (self.currentBattlefieldId ~= battlefield) then
             self.currentBattlefieldId = battlefield
-            --self:ClearBattlefieldsScores()
         end
         
         local status, mapName, instanceID, lowestlevel, highestlevel, teamSize, registeredMatch = GetBattlefieldStatus(i)
-        if (self.db.char.lastBattlefieldStatus[i] ~= status) then
-            self.db.char.lastBattlefieldStatus[i] = status
+        if (self.lastBattlefieldStatus[i] ~= status) then
+            self.lastBattlefieldStatus[i] = status
             if (status == "none") then
                 self:PrintMessage("UPDATE_BATTLEFIELD_STATUS: None")
             elseif (status == "confirm") then
-                -- TODO: Сделать опциональное уведомление в личку о старте?
-                self:SendPartyMessage("Statsy: BG Confirmed '" .. mapName .. "'")
+                local confirmMsg = "Statsy: " .. string.format(L["STATSY_BATTLEFIELD_CONFIRM"], mapName)
+                self:SendPartyMessage(confirmMsg)
+                self:SendConfirmWhisper(confirmMsg)
                 self:MakeConfirmScreenshot()
             elseif (status == "active") then
                 self:PrintMessage("UPDATE_BATTLEFIELD_STATUS: BG Active '" .. mapName .. "'")
+                self:RegisterEvent("UPDATE_BATTLEFIELD_SCORE")
             elseif (status == "queued") then
                 self:PrintMessage("Statsy: BG Queued '" .. mapName .. "'")
             elseif (status == "error") then
@@ -70,23 +74,23 @@ function Statsy:UPDATE_BATTLEFIELD_STATUS()
     end
 end
 
-function Statsy:CHAT_MSG_BG_SYSTEM_HORDE(arg1, text)
+--[[ function Statsy:CHAT_MSG_BG_SYSTEM_HORDE(arg1, text)
     if (self.currentBattlefieldId == BATTLEFIELD_WARSONG) then
         if (text == L["SYSTEM_HORDE_WINS"]) then
             self:OnFactionWins(FACTION_HORDE, BATTLEFIELD_WARSONG)
         end
     end
-end
+end  ]]
 
-function Statsy:CHAT_MSG_BG_SYSTEM_ALLIANCE(arg1, text)
+--[[ function Statsy:CHAT_MSG_BG_SYSTEM_ALLIANCE(arg1, text)
     if (self.currentBattlefieldId == BATTLEFIELD_WARSONG) then
         if (text == L["SYSTEM_ALIANCE_WINS_1"]) then
             self:OnFactionWins(FACTION_ALIANCE, BATTLEFIELD_WARSONG)
         end
     end
-end
+end ]]
 
-function Statsy:CHAT_MSG_BG_SYSTEM_NEUTRAL(arg1, text)
+--[[ function Statsy:CHAT_MSG_BG_SYSTEM_NEUTRAL(arg1, text)
     if (self.currentBattlefieldId == BATTLEFIELD_ARATHI) then
         if (text == L["SYSTEM_HORDE_WINS"]) then
             self:OnFactionWins(FACTION_HORDE, BATTLEFIELD_ARATHI)
@@ -94,20 +98,23 @@ function Statsy:CHAT_MSG_BG_SYSTEM_NEUTRAL(arg1, text)
             self:OnFactionWins(FACTION_ALIANCE, BATTLEFIELD_ARATHI)
         end
     end
-end
+end ]]
 
 function Statsy:UPDATE_BATTLEFIELD_SCORE()
-    if self.currentBattlefieldId == BATTLEFIELD_WARSONG then
-        self:PrintMessage("UPDATE_BATTLEFIELD_SCORE: Warsong")
-        self:GetBattlefieldScores()
+    local battlefieldWinner = GetBattlefieldWinner()
+    if (battlefieldWinner) then
         self:UnregisterEvent("UPDATE_BATTLEFIELD_SCORE")
-    elseif self.currentBattlefieldId == BATTLEFIELD_ARATHI then
-        self:PrintMessage("UPDATE_BATTLEFIELD_SCORE: Arathi")
+        print("UPDATE_BATTLEFIELD_SCORE: Winner=" .. battlefieldWinner)
+    else
+        return
+    end
+    if (self.currentBattlefieldId == BATTLEFIELD_WARSONG or self.currentBattlefieldId == BATTLEFIELD_ARATHI or self.currentBattlefieldId == BATTLEFIELD_ALTERAC) then
+        self:PrintMessage("UPDATE_BATTLEFIELD_SCORE: " .. self.currentBattlefieldId)
+        local winnerFaction = battlefieldWinner == 0 and FACTION_HORDE or FACTION_ALIANCE   -- TODO: переделать константы на 0 для орды и 1 для альянса?
+        self:OnFactionWins(winnerFaction, self.currentBattlefieldId)
         self:GetBattlefieldScores()
-        self:UnregisterEvent("UPDATE_BATTLEFIELD_SCORE")
     else
         self:PrintMessage("UPDATE_BATTLEFIELD_SCORE")
-        self:UnregisterEvent("UPDATE_BATTLEFIELD_SCORE")
     end
 end
 
@@ -117,8 +124,8 @@ end
 
 function Statsy:OnFactionWins(faction, battlefield)
     self:PrintMessage("Statsy: " .. self:GetFactionName(faction) .. " wins!")
-    self:RegisterEvent("UPDATE_BATTLEFIELD_SCORE")
-    RequestBattlefieldScoreData()
+    --self:RegisterEvent("UPDATE_BATTLEFIELD_SCORE")
+    --RequestBattlefieldScoreData()
     self:AddGameResult(faction, battlefield)
 end
 
@@ -170,6 +177,8 @@ function Statsy:GetBattlefieldScores()
             break
         end
     end
+    -- Обновление информации в информационном DataBroker-е
+    self.StatsyInfo:Update()
 end
 
 function Statsy:AddGameStats(battlefield, commonStats, specificStats)
@@ -230,34 +239,102 @@ end
 function Statsy:PrintReport()
     print(COLOR_RED .. "Statsy report:")
 
-    local stats = self:GetStatsCopy()
+    local report = self:CreateReport()
+    for g, group in ipairs(report) do
+        if (#group.elements > 0) then
+            --TODO: Подумать как переделать
+            local groupMsg = COLOR_BLUE .. "[" .. group.title .. "]:"
+            print(groupMsg)
 
-    -- Общая статистика со всех БГ
-    self:PrintStatsMessage(BATTLEFIELD_NONE, true, stats, CHAT_PRINT)
-    -- Максимальная статистика со всех БГ
-    self:PrintStatsMessage(BATTLEFIELD_NONE, false, stats, CHAT_PRINT)
-    -- Общая статистика на "Ущелье Песни Войны"
-    self:PrintStatsMessage(BATTLEFIELD_WARSONG, true, stats, CHAT_PRINT)
-    -- Максимальная статистика на "Ущелье Песни Войны"
-    self:PrintStatsMessage(BATTLEFIELD_WARSONG, false, stats, CHAT_PRINT)
-    -- Общая статистика на "Низина Арати"
-    self:PrintStatsMessage(BATTLEFIELD_ARATHI, true, stats, CHAT_PRINT)
-    -- Максимальная статистика на "Низина Арати"
-    self:PrintStatsMessage(BATTLEFIELD_ARATHI, false, stats, CHAT_PRINT)
-    -- Общая статистика на "Альтеракская Долина"
-    self:PrintStatsMessage(BATTLEFIELD_ALTERAC, true, stats, CHAT_PRINT)
-    -- Максимальная статистика на "Альтеракская Долина"
-    self:PrintStatsMessage(BATTLEFIELD_ALTERAC, false, stats, CHAT_PRINT)
+            for e, element in ipairs(group.elements) do
+                local elementMsg = element.title .. ": " .. element.value
+                print(elementMsg)
+            end
+        end
+    end
 end
 
-function Statsy:PrintStatsMessage(battlefield, isCommon, stats, chatType)
-    local fields
-    if isCommon then
-        fields = {"games", "wins", "losses", "winRate", "commonStats"}
-    else
-        fields = {"maxStats"}
+function Statsy:PrintGroupReport(battlefield, isCommon, chatType)
+    local group = self:CreateReportGroup(battlefield, isCommon)
+    local groupMsg = "[Statsy - " .. group.title .. "]:"
+    self:SendTypedMessage(groupMsg, chatType)
+
+    for e, element in ipairs(group.elements) do
+        local elementMsg = element.title .. ": " .. element.value
+        self:SendTypedMessage(elementMsg, chatType)
+    end
+end
+
+function Statsy:CreateReport()
+    local report = {}
+    local stats = self:GetStatsCopy()
+
+    local bfs = Utils:DeepCopy(ALL_BATTLEFIELDS)
+    table.insert(bfs, 1, BATTLEFIELD_NONE)
+
+    local fieldGroups = {true, false}   -- common or max
+
+    for b, battlefield in ipairs(bfs) do
+        for f, fieldGroup in ipairs(fieldGroups) do
+            local group = self:CreateReportGroup(battlefield, fieldGroup, stats)
+            table.insert(report, group)
+        end
     end
 
+    return report
+end
+
+function Statsy:CreateReportGroup(battlefield, isCommon, stats)
+    local group = {
+        title = nil,
+        elements = {}
+    }
+
+    local fields = self:GetGroupFields(isCommon)
+    local title = self:GetGroupTitle(battlefield, isCommon)
+
+    if (stats == nil) then
+        stats = self:GetStatsCopy()
+    end
+
+    group.title = title
+    group.elements = self:CreateReportElements(battlefield, stats, fields)
+
+    return group
+end
+
+function Statsy:CreateReportElements(battlefield, stats, fields)
+    local elements = {}
+    local bfStats = stats[battlefield]
+    local props = Utils:GetParentPropertiesFromArray(bfStats, fields)
+
+    for i, prop in ipairs(props) do
+        local element = self:CreateReportElement(bfStats, prop)
+        if (element ~= nil) then
+            table.insert(elements, element)
+        end
+    end
+
+    return elements
+end
+
+function Statsy:CreateReportElement(bfStats, path)
+    local pathArray = Utils:Split(path, ".")
+    local localeId = pathArray[#pathArray]
+    local locale = "STATS_" .. string.upper(localeId)
+    local modelPart = Utils:GetPropByPathArray(bfStats, pathArray)
+
+    if (modelPart ~= null and modelPart.report) then
+        return {
+            title = L[locale],
+            value = modelPart.value
+        }
+    else
+        return nil
+    end
+end
+
+function Statsy:GetGroupTitle(battlefield, isCommon)
     local title
     if (battlefield == BATTLEFIELD_NONE) then
         title = isCommon and L["GUI_TOTAL_COMMONSTATS"] or L["GUI_TOTAL_MAXSTATS"]
@@ -271,12 +348,15 @@ function Statsy:PrintStatsMessage(battlefield, isCommon, stats, chatType)
         title = isCommon and L["GUI_BATTLEFIELD_COMMONSTATS"] or L["GUI_BATTLEFIELD_MAXSTATS"]
         title = string.format(title, L["SYSTEM_BATTLEFIELD_ALTERAC"])
     end
+    return title
+end
 
-    if (stats == nil) then
-        stats = self:GetStatsCopy()
+function Statsy:GetGroupFields(isCommon)
+    if isCommon then
+        return {"games", "wins", "losses", "winRate", "commonStats"}
+    else
+        return {"maxStats"}
     end
-
-    self:PrintModelBattlefieldReport(title, battlefield, stats, fields, chatType)
 end
 
 function Statsy:CalcSumStats(stats)
@@ -328,50 +408,12 @@ function Statsy:CalcSumStats(stats)
     tsMs.honorableKills.value = maxHonorableKills
 end
 
-function Statsy:PrintModelBattlefieldReport(title, battlefield, stats, fields, chatType)
-    local propReports = {}
-    local bfStats = stats[battlefield]
-    local props = Utils:GetParentPropertiesFromArray(bfStats, fields)
-    for i = 1, #props do
-        local p = props[i]
-        local propReport = self:GetModelFieldReport(bfStats, p)
-        if (propReport ~= nil) then
-            table.insert(propReports, propReport)
-        end
-    end
-
-    if (#propReports == 0) then
-        return
-    end
-
-    local msg = "[Statsy - " .. title .. "]:"
-    if chatType == CHAT_PRINT then
-        msg = COLOR_BLUE .. msg
-    end
-    self:SendTypedMessage(msg, chatType)
-    for i = 1, #propReports do
-        local propReport = propReports[i]
-        self:SendTypedMessage(propReport, chatType)
-    end
-end
-
-function Statsy:GetModelFieldReport(bfStats, path)
-    local pathArray = Utils:Split(path, ".")
-    local localeId = pathArray[#pathArray]
-    local locale = "STATS_" .. string.upper(localeId)
-    local modelPart = Utils:GetPropByPathArray(bfStats, pathArray)
-
-    if (modelPart ~= null and modelPart.report) then
-        return L[locale] .. ": " .. modelPart.value
-    else
-        return nil
-    end
-end
-
 function Statsy:MakeConfirmScreenshot()
     if (self.db.profile.makeConfirmScreenshots) then
         self:PrintMessage("MakeConfirmScreenshot")
-        Screenshot()
+        self:ScheduleTimer(function()   -- Таймер для ожидания появления окна подтверждения перед скриншотом
+            Screenshot()
+        end, 1)
     end
 end
 
@@ -404,6 +446,12 @@ function Statsy:SendPartyMessage(msg)
         SendChatMessage(msg , chatType);
     else
         print(msg)
+    end
+end
+
+function Statsy:SendConfirmWhisper(msg)
+    if (self.db.profile.sendConfirmWhisper) then
+        SendChatMessage(msg, "WHISPER", nil, self.playerName)
     end
 end
 

@@ -1,14 +1,17 @@
 local L = LibStub("AceLocale-3.0"):NewLocale("Statsy", "ruRU")
 if not L then return end
 
-L["SYSTEM_HORDE_WINS"] = "Орда победила!"
+--[[ L["SYSTEM_HORDE_WINS"] = "Орда победила!"
 L["SYSTEM_ALIANCE_WINS_1"] = "Альянс побеждает!"
-L["SYSTEM_ALIANCE_WINS_2"] = "Альянс победил!"
+L["SYSTEM_ALIANCE_WINS_2"] = "Альянс победил!" ]]
 L["SYSTEM_BATTLEFIELD_WARSONG"] = "Ущелье Песни Войны"
 L["SYSTEM_BATTLEFIELD_ARATHI"] = "Низина Арати"
 L["SYSTEM_BATTLEFIELD_ALTERAC"] = "Альтеракская Долина"
 
+L["STATSY_BATTLEFIELD_CONFIRM"] = "Вы можете войти на поле боя: %q"
+
 L["GUI_MAKE_CONFIRM_SCREENSHOTS"] = "Делать скриншот при вызове на БГ"
+L["GUI_SEND_CONFIRM_WHISPER"] = "Личное сообщение при вызове на БГ"
 L["GUI_DEBUG_MESSAGES"] = "Выводить отладочную информацию"
 L["GUI_COMMON"] = "Общие настройки"
 L["GUI_TOTAL_COMMONSTATS_SHORT"] = "Общая статистика"

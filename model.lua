@@ -92,6 +92,7 @@ Model = {
     },
     profile = {
         makeConfirmScreenshots = false, -- Делать скриншот игры при вызове на БГ (для отлавливания события вне игры)
+        sendConfirmWhisper = true, -- Отправлять сообщение о старте игры себе для мигания иконки игры
         minimap = {
             shown = true,
             locked = false,
