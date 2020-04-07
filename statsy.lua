@@ -185,9 +185,9 @@ function Statsy:AddGameStats(battlefield, commonStats, specificStats)
     local savedStats = self.db.char.stats[battlefield]
 
     local cs = savedStats.commonStats
-    cs.killingBlows.value = commonStats.killingBlows
-    cs.deaths.value = commonStats.deaths
-    cs.honorableKills.value = commonStats.honorableKills
+    cs.killingBlows.value = cs.killingBlows.value + commonStats.killingBlows
+    cs.deaths.value = cs.deaths.value + commonStats.deaths
+    cs.honorableKills.value = cs.honorableKills.value + commonStats.honorableKills
     
     if (battlefield == BATTLEFIELD_WARSONG) then
         cs.flagCaptures.value = cs.flagCaptures.value + specificStats.flagCaptures
