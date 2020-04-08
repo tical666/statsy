@@ -46,4 +46,7 @@ function StatsyInfo:Update()
 	local rankName, rankNumber = Statsy:GetPlayerPVPRankInfo()
 	local rankNumberStr = rankNumber >= 10 and rankNumber or ("0" .. rankNumber)
 	StatsyInfo.icon = "Interface\\PvPRankBadges\\PvPRank" .. rankNumberStr
+
+	-- TODO: Временно, для отлова ошибки с зеленой иконкой
+	Statsy:PrintMessage(StatsyInfo.icon)
 end

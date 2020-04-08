@@ -10,6 +10,8 @@ L["SYSTEM_BATTLEFIELD_ALTERAC"] = "Альтеракская Долина"
 
 L["STATSY_BATTLEFIELD_CONFIRM"] = "Вы можете войти на поле боя: %q"
 
+L["GUI_TAB_1"] = "Общие настройки"
+L["GUI_TAB_2"] = "Вывод статистики"
 L["GUI_MAKE_CONFIRM_SCREENSHOTS"] = "Делать скриншот при вызове на БГ"
 L["GUI_SEND_CONFIRM_WHISPER"] = "Личное сообщение при вызове на БГ"
 L["GUI_DEBUG_MESSAGES"] = "Выводить отладочную информацию"

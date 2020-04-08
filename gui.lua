@@ -1,10 +1,15 @@
-local GUI = {
-    optionsFrame = nil,
-    db = nil
-}
-
 local AceGUI = LibStub("AceGUI-3.0")
 local L = LibStub("AceLocale-3.0"):GetLocale("Statsy")
+
+local GUI = {
+    optionsFrame = nil,
+    db = nil,
+    tabs = {
+        {text = L["GUI_TAB_1"], value = "tab1"},
+        {text = L["GUI_TAB_2"], value = "tab2"}
+    },
+    defaultTab = "tab1"
+}
 LibStub("AceEvent-3.0"):Embed(GUI)
 
 function GUI:InitDB(db)
@@ -30,9 +35,31 @@ function GUI:OptionsFrameCreate()
         end)
     frame:SetLayout("Fill")
 
-    scrollContainer = AceGUI:Create("ScrollFrame")
+    local tabs = AceGUI:Create("TabGroup")
+    tabs:SetLayout("Fill")
+    tabs:SetTabs(self.tabs)
+    tabs:SetCallback("OnGroupSelected", function(widget, event, group)
+        self:OnSelectTab(widget, event, group)
+    end)
+    tabs:SelectTab(self.defaultTab)
+    frame:AddChild(tabs)
+
+    self.optionsFrame = frame
+end
+
+function GUI:OnSelectTab(container, event, tab)
+    container:ReleaseChildren()
+    if (tab == "tab1") then
+        self:CreateTab1(container)
+    elseif (tab == "tab2") then
+        self:CreateTab2(container)
+    end
+end
+
+function GUI:CreateTab1(container)
+    local scrollContainer = AceGUI:Create("ScrollFrame")
     scrollContainer:SetLayout("List")
-    frame:AddChild(scrollContainer)
+    container:AddChild(scrollContainer)
 
     local commonContainer = self:CreateModelContainer(scrollContainer, L["GUI_COMMON"])
 
@@ -65,6 +92,12 @@ function GUI:OptionsFrameCreate()
             self:SetDebugMessages(value)
         end)
     commonContainer:AddChild(cbDm)
+end
+
+function GUI:CreateTab2(container)
+    local scrollContainer = AceGUI:Create("ScrollFrame")
+    scrollContainer:SetLayout("List")
+    container:AddChild(scrollContainer)
 
     -- TODO: Отрефакторить и сделать по аналогии с кодом из Statsy
     -- Общая статистика со всех БГ
@@ -108,8 +141,6 @@ function GUI:OptionsFrameCreate()
     -- Label для фикса ошибки когда не вмещается всё содержимое
     local fixLb = AceGUI:Create("Label")
     scrollContainer:AddChild(fixLb)
-
-    self.optionsFrame = frame
 end
 
 function GUI:CreateModelCheckboxGroup(container, text, battlefield, fields, isCommon)
