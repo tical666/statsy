@@ -4,7 +4,6 @@ L = LibStub("AceLocale-3.0"):GetLocale("Statsy")
 function Statsy:OnInitialize()
     self:InitDB()
     self:Init()
-    self.StatsyInfo:Update()  --TODO: переделать
 end
 
 function Statsy:InitDB()
@@ -12,7 +11,6 @@ function Statsy:InitDB()
 end
 
 function Statsy:Init()
-    self.screenshotTimer = nil
     self.playerName = self:GetPlayerName()
     self.playerFaction = self:GetPlayerFaction() == "Alliance" and FACTION_ALIANCE or FACTION_HORDE
     self.currentBattlefieldId = BATTLEFIELD_NONE
@@ -31,11 +29,10 @@ end
 
 function Statsy:OnEnable()
     self:PrintLoadMessage()
+    self.StatsyInfo:Update()  --TODO: переделать
+
     self:RegisterEvent("UPDATE_BATTLEFIELD_STATUS")
     --self:RegisterEvent("UPDATE_BATTLEFIELD_SCORE")
-    --self:RegisterEvent("CHAT_MSG_BG_SYSTEM_HORDE")
-    --self:RegisterEvent("CHAT_MSG_BG_SYSTEM_ALLIANCE")
-    --self:RegisterEvent("CHAT_MSG_BG_SYSTEM_NEUTRAL")
 
     self:RegisterChatCommand("statsy", "SLASHCOMMAND_STATSY")
     self:RegisterMessage("STATSY", "MESSAGE_HANDLER")
@@ -74,32 +71,6 @@ function Statsy:UPDATE_BATTLEFIELD_STATUS()
     end
 end
 
---[[ function Statsy:CHAT_MSG_BG_SYSTEM_HORDE(arg1, text)
-    if (self.currentBattlefieldId == BATTLEFIELD_WARSONG) then
-        if (text == L["SYSTEM_HORDE_WINS"]) then
-            self:OnFactionWins(FACTION_HORDE, BATTLEFIELD_WARSONG)
-        end
-    end
-end  ]]
-
---[[ function Statsy:CHAT_MSG_BG_SYSTEM_ALLIANCE(arg1, text)
-    if (self.currentBattlefieldId == BATTLEFIELD_WARSONG) then
-        if (text == L["SYSTEM_ALIANCE_WINS_1"]) then
-            self:OnFactionWins(FACTION_ALIANCE, BATTLEFIELD_WARSONG)
-        end
-    end
-end ]]
-
---[[ function Statsy:CHAT_MSG_BG_SYSTEM_NEUTRAL(arg1, text)
-    if (self.currentBattlefieldId == BATTLEFIELD_ARATHI) then
-        if (text == L["SYSTEM_HORDE_WINS"]) then
-            self:OnFactionWins(FACTION_HORDE, BATTLEFIELD_ARATHI)
-        elseif (text == L["SYSTEM_ALIANCE_WINS_2"]) then
-            self:OnFactionWins(FACTION_ALIANCE, BATTLEFIELD_ARATHI)
-        end
-    end
-end ]]
-
 function Statsy:UPDATE_BATTLEFIELD_SCORE()
     local battlefieldWinner = GetBattlefieldWinner()
     if (battlefieldWinner) then
@@ -124,8 +95,6 @@ end
 
 function Statsy:OnFactionWins(faction, battlefield)
     self:PrintMessage("Statsy: " .. self:GetFactionName(faction) .. " wins!")
-    --self:RegisterEvent("UPDATE_BATTLEFIELD_SCORE")
-    --RequestBattlefieldScoreData()
     self:AddGameResult(faction, battlefield)
 end
 
@@ -256,6 +225,11 @@ end
 
 function Statsy:PrintGroupReport(battlefield, isCommon, chatType)
     local group = self:CreateReportGroup(battlefield, isCommon)
+
+    if (#group.elements == 0) then
+        return
+    end
+
     local groupMsg = "[Statsy - " .. group.title .. "]:"
     self:SendTypedMessage(groupMsg, chatType)
 

@@ -20,7 +20,7 @@ function StatsyInfo:OnTooltipShow()
 			self:AddLine(groupMsg)
 
             for e, element in ipairs(group.elements) do
-                local elementMsg = element.title .. ": " .. element.value
+                local elementMsg = element.title .. ": " .. COLOR_WHITE .. element.value
 				self:AddLine(elementMsg)
 			end
         end
