@@ -8,16 +8,17 @@ end
 
 function Statsy:InitDB()
     self.db = LibStub("AceDB-3.0"):New("StatsyDB", Model)
+    
+    self:SendMessage("GUI", "InitDB", self.db)
+    self:SendMessage("MINIMAP", "InitDB", self.db)
 end
 
 function Statsy:Init()
     self.playerName = self:GetPlayerName()
-    self.playerFaction = self:GetPlayerFaction() == "Alliance" and FACTION_ALIANCE or FACTION_HORDE
+    self.playerServer = self:GetPlayerServer()
+    self.playerFaction = self:GetPlayerFaction()
     self.currentBattlefieldId = BATTLEFIELD_NONE
     self.lastBattlefieldStatus = {}
-
-    self:SendMessage("GUI", "InitDB", self.db)
-    self:SendMessage("MINIMAP", "InitDB", self.db)
 end
 
 function Statsy:AddInitFunction(func)
@@ -30,6 +31,10 @@ end
 function Statsy:OnEnable()
     self:PrintLoadMessage()
     self.StatsyInfo:Update()  --TODO: переделать
+
+    if (not C_ChatInfo.RegisterAddonMessagePrefix(ADDON_PREFIX)) then
+        print(COLOR_RED .. "Error: " .. ADDON_PREFIX .. " prefix already registered!")
+    end
 
     self:RegisterEvent("UPDATE_BATTLEFIELD_STATUS")
     --self:RegisterEvent("UPDATE_BATTLEFIELD_SCORE")
@@ -62,6 +67,7 @@ function Statsy:UPDATE_BATTLEFIELD_STATUS()
             elseif (status == "active") then
                 self:PrintMessage("UPDATE_BATTLEFIELD_STATUS: BG Active '" .. mapName .. "'")
                 self:RegisterEvent("UPDATE_BATTLEFIELD_SCORE")
+                self:GetModule("BFModule"):OnBattlefieldStart() --TODO: Переделать
             elseif (status == "queued") then
                 self:PrintMessage("Statsy: BG Queued '" .. mapName .. "'")
             elseif (status == "error") then
@@ -74,6 +80,7 @@ end
 function Statsy:UPDATE_BATTLEFIELD_SCORE()
     local battlefieldWinner = GetBattlefieldWinner()
     if (battlefieldWinner) then
+        self:GetModule("BFModule"):OnBattlefieldEnd()   --TODO: Переделать
         self:UnregisterEvent("UPDATE_BATTLEFIELD_SCORE")
         print("UPDATE_BATTLEFIELD_SCORE: Winner=" .. battlefieldWinner)
     else
@@ -112,7 +119,7 @@ function Statsy:GetBattlefieldScores()
     local battlefield = self.currentBattlefieldId
     local numScores = GetNumBattlefieldScores()
     for i = 1, numScores do
-        local name, killingBlows, honorableKills, deaths, honorGained, faction, rank, race, class = GetBattlefieldScore(i);
+        local name, killingBlows, honorableKills, deaths, honorGained, faction, rank, race, class = GetBattlefieldScore(i)
         if (name == self.playerName) then
             local commonStats = {
                 killingBlows = killingBlows,
@@ -207,6 +214,9 @@ end
 
 function Statsy:PrintReport()
     print(COLOR_RED .. "Statsy report:")
+
+    --ShowUIPanel(WorldStateScoreFrame)
+    self:GetModule("BFModule"):PLAYER_TARGET_CHANGED()
 
     local report = self:CreateReport()
     for g, group in ipairs(report) do
@@ -474,7 +484,15 @@ function Statsy:GetPlayerName()
 end
 
 function Statsy:GetPlayerFaction()
-    return UnitFactionGroup("player")
+    return self:GetUnitFaction("player")
+end
+
+function Statsy:GetUnitFaction(unitId)
+    return UnitFactionGroup(unitId) == "Alliance" and FACTION_ALIANCE or FACTION_HORDE
+end
+
+function Statsy:GetPlayerServer()
+    return GetRealmName()
 end
 
 function Statsy:PrintMessage(msg)
