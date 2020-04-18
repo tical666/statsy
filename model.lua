@@ -1,6 +1,5 @@
 Model = {
     char = {
-        lastBattlefieldStatus = {},
         stats = {
             [BATTLEFIELD_NONE] = {
                 games = {report = true},
@@ -95,10 +94,17 @@ Model = {
         sendConfirmWhisper = true, -- Отправлять сообщение о старте игры себе для мигания иконки игры
         showBattlefieldLevels = true,   -- Показывать уровни игроков на БГ
         showBattlefieldClassColors = true,  -- Окрашивать имена игроков согласно классам на БГ
-        minimap = {
+        savePlayersStats = true,
+        minimap = { -- Параметры иконки у миникарты
             shown = true,
             locked = false,
             minimapPos = 218
+        }
+    },
+    global = {
+        players = {
+            [FACTION_HORDE] = {},
+            [FACTION_ALIANCE] = {}
         }
     }
 }

@@ -43,7 +43,7 @@ function StatsyInfo:Update()
 	local wins, losses, winRate = Statsy:GetWinsLosses()
 	StatsyInfo.text = string.format(COLOR_GREEN .. "W:%d " .. COLOR_RED .. "L:%d " .. COLOR_YELLOW .. "WR:%s", wins, losses, winRate)
 
-	local rankName, rankNumber = Statsy:GetPlayerPVPRankInfo()
+	local rankName, rankNumber = Utils:GetPlayerPVPRankInfo()
 	local rankNumberStr = rankNumber >= 10 and rankNumber or ("0" .. rankNumber)
 	StatsyInfo.icon = "Interface\\PvPRankBadges\\PvPRank" .. rankNumberStr
 end

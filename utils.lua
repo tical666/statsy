@@ -78,3 +78,30 @@ end
 function Utils:PercentFormat(value)
     return string.format("%0.0f", value) .. "%"
 end
+
+function Utils:GetPlayerName()
+    return UnitName("player")
+end
+
+function Utils:GetPlayerServer()
+    return GetRealmName()
+end
+
+function Utils:GetPlayerFaction()
+    return Utils:GetUnitFaction("player")
+end
+
+function Utils:GetOppositeFaction()
+    local playerFaction = Utils:GetPlayerFaction()
+    return playerFaction == FACTION_ALIANCE and FACTION_HORDE or FACTION_ALIANCE
+end
+
+function Utils:GetUnitFaction(unitId)
+    return UnitFactionGroup(unitId) == "Alliance" and FACTION_ALIANCE or FACTION_HORDE
+end
+
+function Utils:GetPlayerPVPRankInfo()
+    local rankId = UnitPVPRank("player")
+    local rankName, rankNumber = GetPVPRankInfo(rankId)
+    return rankName, rankNumber
+end

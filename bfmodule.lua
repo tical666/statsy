@@ -3,12 +3,8 @@ local _G = getfenv(0)
 local BFModule = Statsy:NewModule("BFModule", "AceEvent-3.0", "AceHook-3.0")
 
 function BFModule:OnInitialize()
-    self.db = Statsy.db
-
-    self.players = {
-        [FACTION_ALIANCE] = {},
-        [FACTION_HORDE] = {}
-    }
+    self:Init()
+    self:InitDB()
 end
 
 function BFModule:OnEnable()
@@ -18,8 +14,26 @@ end
 function BFModule:OnDisable()
 end
 
+function BFModule:Init()
+    Statsy:PrintMessage("Init")
+    self.playerName = Utils:GetPlayerName()
+    self.playerServer = Utils:GetPlayerServer()
+    self.playerFaction = Utils:GetPlayerFaction()
+
+    self.players = {
+        [FACTION_ALIANCE] = {},
+        [FACTION_HORDE] = {}
+    }
+end
+
+function BFModule:InitDB()
+    Statsy:PrintMessage("InitDB")
+    self.db = Statsy.db
+end
+
 -- TODO: Подумать, может убрать прямой вызов?
 function BFModule:OnBattlefieldStart()
+    self:ClearPlayersInfo()
     self:RegisterEvent("GROUP_ROSTER_UPDATE")
     self:RegisterEvent("UNIT_TARGET")
     self:RegisterEvent("PLAYER_TARGET_CHANGED")
@@ -38,10 +52,10 @@ end
 
 function BFModule:GROUP_ROSTER_UPDATE()
     self:UpdatePartyInfo()
-    self:ArchiveEnemiesPartyInfo()
 end
 
-function BFModule:UNIT_TARGET(unitTarget)
+function BFModule:UNIT_TARGET(arg1, unitTarget)
+    --Statsy:PrintMessage("UNIT_TARGET: " .. unitTarget)
     self:UpdateTargetInfo(unitTarget .. "target")
 end
 
@@ -66,47 +80,43 @@ function BFModule:UpdateChatTargetInfo(msg)
         return
     end
     local fullName, level = parts[1], parts[2]
-
-    local player = {    -- TODO: Повторение кода
-        name = fullName,
-        level = level,
-        archived = false
-    }
-    self.players[unitFaction][fullName] = player
+    self:AddBattlefieldPlayer(self.playerFaction, fullName, level, true)
 end
 
 function BFModule:UpdatePartyInfo()
     -- TODO: Плохо обращаться к Statsy напрямую
-    self.players[Statsy.playerFaction] = {}   -- Сброс уже сохраненной информации
-    local friends = self.players[Statsy.playerFaction]
+    self.players[self.playerFaction] = {}   -- Сброс уже сохраненной информации
 
     local numGroupMembers = GetNumGroupMembers()
     for i = 1, numGroupMembers do
         local name, rank, subgroup, level, class, fileName, zone, online, isDead, role, isML, combatRole = GetRaidRosterInfo(i)
         if (name) then
             local fullName = self:GetFullName(name, nil)
-            local player = {
-                name = fullName,
-                level = level,  -- FIXME: Почему-то иногда отображается 0
-                archived = false
-            }
-            friends[fullName] = player
+            self:AddBattlefieldPlayer(self.playerFaction, fullName, level, false)
         end
     end
 end
 
--- TODO: Подумать как переделать, т.к. архив будет большим
-function BFModule:ArchiveEnemiesPartyInfo()
-    local enemiesFraction = Statsy.playerFaction == FACTION_ALIANCE and FACTION_HORDE or FACTION_ALIANCE
-    local players = self.players[enemiesFraction]
-    for name, player in ipairs(players) do
-        player.archived = true
-    end
+function BFModule:ClearPlayersInfo()
+    self.players = {
+        [FACTION_ALIANCE] = {},
+        [FACTION_HORDE] = {}
+    }
+end
+
+function BFModule:Test()
+    --TODO: метод для тестов
 end
 
 function BFModule:UpdateTargetInfo(unitTarget)
-    local unitFaction = Statsy:GetUnitFaction(unitTarget)
-    if (Statsy.playerFaction == unitFaction) then
+    local unitFaction = Utils:GetUnitFaction(unitTarget)
+    if (self.playerFaction == unitFaction) then
+        return
+    end
+
+    -- Отсекаем петов
+    local creatureFamily = UnitCreatureFamily(unitTarget)
+    if (creatureFamily ~= nil) then
         return
     end
 
@@ -121,15 +131,43 @@ function BFModule:UpdateTargetInfo(unitTarget)
     end
 
     local fullName = self:GetFullName(name, server)
-
-    local player = {    -- TODO: Повторение кода
-        name = fullName,
-        level = level,
-        archived = false
-    }
-    self.players[unitFaction][fullName] = player
+    self:AddBattlefieldPlayer(unitFaction, fullName, level, true)
 
     self:SendAddonEventMessage(ADDON_EVENT_TARGET_INFO, fullName .. ":" .. level)
+end
+
+function BFModule:CreatePlayer(fullName, level)
+    local player = {
+        level = level
+    }
+    return player
+end
+
+function BFModule:AddBattlefieldPlayer(faction, fullName, level, savePdb)
+    local player = self:CreatePlayer(fullName, level)
+    self.players[faction][fullName] = player
+
+    if (savePdb) then
+        self.db.global.players[faction][fullName] = player
+    end
+end
+
+function BFModule:GetBattlefieldPlayer(faction, fullName)
+    -- Получение игрока с актуальной информацией из текущей игровой сессии
+    local actualPlayer = BFModule.players[faction][fullName]    --TODO: Избавиться от BFModule
+    if (actualPlayer) then
+        actualPlayer.archived = false
+        return actualPlayer
+    end
+    
+    -- Получение игрока из сохраненной БД
+    local archivedPlayer = BFModule.db.global.players[faction][fullName]  --TODO: Избавиться от BFModule
+    if (archivedPlayer) then
+        archivedPlayer.archived = true
+        return archivedPlayer
+    end
+
+    return nil
 end
 
 function BFModule:WorldStateScoreFrame_Update()
@@ -146,7 +184,7 @@ function BFModule:WorldStateScoreFrame_Update()
             local nameStr = BFModule:WrapNameInClassColor(playerName, filename) .. "-" .. playerServer
 
             local playerFaction = faction == 0 and FACTION_HORDE or FACTION_ALIANCE
-            local player = BFModule.players[playerFaction][fullName]
+            local player = BFModule:GetBattlefieldPlayer(playerFaction, fullName)
             if (player) then
                 local lvlColor = player.archived and COLOR_GREY or "FFFFFFFF"   --TODO: Переделать цвета в константах без |c
                 nameStr = " " .. WrapTextInColorCode(player.level, lvlColor) .. " " .. nameStr
@@ -173,7 +211,7 @@ function BFModule:SplitNameServer(nameServer)
         name, server = string.match(nameServer, "(.-)%-(.*)$")
     else
         name = nameServer
-        server = Statsy.playerServer
+        server = self.playerServer
     end
     return name, server
 end
@@ -195,7 +233,7 @@ function BFModule:GetAddonEventMessage(prefix, msg, channel, sender)
     if (channel ~= "INSTANCE_CHAT") then
         return
     end
-    if (sender == Statsy.playerName) then
+    if (sender == self.playerName) then
         return
     end
 
@@ -214,6 +252,7 @@ end
     return WrapTextInColorCode(name, faction == FACTION_ALIANCE and "FF" or "FF")
 end ]]
 
+--TODO: Использовать AceHook
 hooksecurefunc("WorldStateScoreFrame_Update", function()
     BFModule:WorldStateScoreFrame_Update()
 end)

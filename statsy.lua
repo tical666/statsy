@@ -14,9 +14,9 @@ function Statsy:InitDB()
 end
 
 function Statsy:Init()
-    self.playerName = self:GetPlayerName()
-    self.playerServer = self:GetPlayerServer()
-    self.playerFaction = self:GetPlayerFaction()
+    self.playerName = Utils:GetPlayerName()
+    self.playerServer = Utils:GetPlayerServer()
+    self.playerFaction = Utils:GetPlayerFaction()
     self.currentBattlefieldId = BATTLEFIELD_NONE
     self.lastBattlefieldStatus = {}
 end
@@ -216,7 +216,7 @@ function Statsy:PrintReport()
     print(COLOR_RED .. "Statsy report:")
 
     --ShowUIPanel(WorldStateScoreFrame)
-    self:GetModule("BFModule"):PLAYER_TARGET_CHANGED()
+    self:GetModule("BFModule"):Test()
 
     local report = self:CreateReport()
     for g, group in ipairs(report) do
@@ -479,22 +479,6 @@ function Statsy:GetFactionName(faction)
     end
 end
 
-function Statsy:GetPlayerName()
-    return UnitName("player")
-end
-
-function Statsy:GetPlayerFaction()
-    return self:GetUnitFaction("player")
-end
-
-function Statsy:GetUnitFaction(unitId)
-    return UnitFactionGroup(unitId) == "Alliance" and FACTION_ALIANCE or FACTION_HORDE
-end
-
-function Statsy:GetPlayerServer()
-    return GetRealmName()
-end
-
 function Statsy:PrintMessage(msg)
     if not self.db.profile.debugMessages then
         return
@@ -506,10 +490,4 @@ function Statsy:GetWinsLosses()
     local stats = self:GetStatsCopy()
     local totalStats = stats[BATTLEFIELD_NONE]
     return totalStats.wins.value, totalStats.losses.value, totalStats.winRate.value
-end
-
-function Statsy:GetPlayerPVPRankInfo()
-    local rankId = UnitPVPRank("player")
-    local rankName, rankNumber = GetPVPRankInfo(rankId)
-    return rankName, rankNumber
 end

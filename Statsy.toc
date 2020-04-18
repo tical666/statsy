@@ -1,7 +1,7 @@
 ## Interface: 11304
 ## Title: Statsy
-## Author: Лайф
-## Version: 0.7
+## Author: Лайф-Змейталак
+## Version: 0.8
 ## SavedVariables: StatsyDB
 ## OptionalDeps: LibStub, Ace3
 
