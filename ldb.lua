@@ -9,18 +9,16 @@ Statsy.StatsyInfo = LDB:NewDataObject("Statsy Info", {
 local StatsyInfo = Statsy.StatsyInfo
 
 function StatsyInfo:OnTooltipShow()
-	self:AddLine(COLOR_RED .. "Statsy")
+	self:AddLine(WrapTextInColorCode("Statsy", COLOR_RED))
 
 	local report = Statsy:CreateReport()
     for g, group in ipairs(report) do
 		if (#group.elements > 0) then
 			self:AddLine(" ")	-- Пустая строка для отступа
-            --TODO: Подумать как переделать
-            local groupMsg = COLOR_BLUE .. "[" .. group.title .. "]:"
-			self:AddLine(groupMsg)
+			self:AddLine(WrapTextInColorCode("[" .. group.title .. "]:", COLOR_BLUE))
 
             for e, element in ipairs(group.elements) do
-                local elementMsg = element.title .. ": " .. COLOR_WHITE .. element.value
+                local elementMsg = element.title .. ": " .. WrapTextInColorCode(element.value, COLOR_WHITE)
 				self:AddLine(elementMsg)
 			end
         end
@@ -41,7 +39,11 @@ end
 
 function StatsyInfo:Update()
 	local wins, losses, winRate = Statsy:GetWinsLosses()
-	StatsyInfo.text = string.format(COLOR_GREEN .. "W:%d " .. COLOR_RED .. "L:%d " .. COLOR_YELLOW .. "WR:%s", wins, losses, winRate)
+	StatsyInfo.text = string.format(
+		WrapTextInColorCode("W:%d ", COLOR_GREEN) ..
+		WrapTextInColorCode("L:%d ", COLOR_RED) ..
+		WrapTextInColorCode("WR:%s", COLOR_YELLOW), 
+		wins, losses, winRate)
 
 	local rankName, rankNumber = Utils:GetPlayerPVPRankInfo()
 	local rankNumberStr = rankNumber >= 10 and rankNumber or ("0" .. rankNumber)

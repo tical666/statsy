@@ -33,7 +33,7 @@ function Statsy:OnEnable()
     self.StatsyInfo:Update()  --TODO: переделать
 
     if (not C_ChatInfo.RegisterAddonMessagePrefix(ADDON_PREFIX)) then
-        print(COLOR_RED .. "Error: " .. ADDON_PREFIX .. " prefix already registered!")
+        Utils:ColorPrint("Error: " .. ADDON_PREFIX .. " prefix already registered!", COLOR_RED)
     end
 
     self:RegisterEvent("UPDATE_BATTLEFIELD_STATUS")
@@ -213,16 +213,14 @@ function Statsy:SLASHCOMMAND_STATSY()
 end
 
 function Statsy:PrintReport()
-    print(COLOR_RED .. "Statsy report:")
+    Utils:ColorPrint("Statsy report:", COLOR_RED)
 
     self:GetModule("BFModule"):Test()
 
     local report = self:CreateReport()
     for g, group in ipairs(report) do
         if (#group.elements > 0) then
-            --TODO: Подумать как переделать
-            local groupMsg = COLOR_BLUE .. "[" .. group.title .. "]:"
-            print(groupMsg)
+            Utils:ColorPrint("[" .. group.title .. "]:", COLOR_BLUE)
 
             for e, element in ipairs(group.elements) do
                 local elementMsg = element.title .. ": " .. element.value
@@ -401,7 +399,7 @@ function Statsy:MakeConfirmScreenshot()
 end
 
 function Statsy:PrintLoadMessage()
-    print(COLOR_RED .. "Statsy: Loaded")
+    Utils:ColorPrint("Statsy: Loaded", COLOR_RED)
 end
 
 function Statsy:SendTypedMessage(msg, chatType)

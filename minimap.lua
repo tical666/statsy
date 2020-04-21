@@ -11,7 +11,7 @@ StatsyMinimap.StatsyLDB = LibStub:GetLibrary("LibDataBroker-1.1"):NewDataObject(
 	text = "Statsy",
     icon = "Interface\\Icons\\ability_marksmanship",
     OnTooltipShow = function(tooltip)
-		tooltip:AddLine(COLOR_RED .. "Statsy");
+		tooltip:AddLine(WrapTextInColorCode("Statsy", COLOR_RED));
 		tooltip:AddLine("Report stats to chat")
 	end,
 	OnClick = function(arg1, button)

@@ -109,3 +109,7 @@ end
 function Utils:WrapNameInClassColor(name, classFilename)
     return WrapTextInColorCode(name, GetClassColorObj(classFilename).colorStr)
 end
+
+function Utils:ColorPrint(msg, color)
+    print(WrapTextInColorCode(msg, color))
+end
