@@ -61,7 +61,7 @@ function Statsy:UPDATE_BATTLEFIELD_STATUS()
                 self:PrintMessage("UPDATE_BATTLEFIELD_STATUS: None")
             elseif (status == "confirm") then
                 local confirmMsg = "Statsy: " .. string.format(L["STATSY_BATTLEFIELD_CONFIRM"], mapName)
-                self:SendPartyMessage(confirmMsg)
+                self:SendConfirmToParty(confirmMsg)
                 self:SendConfirmWhisper(confirmMsg)
                 self:MakeConfirmScreenshot()
             elseif (status == "active") then
@@ -215,7 +215,6 @@ end
 function Statsy:PrintReport()
     print(COLOR_RED .. "Statsy report:")
 
-    --ShowUIPanel(WorldStateScoreFrame)
     self:GetModule("BFModule"):Test()
 
     local report = self:CreateReport()
@@ -430,6 +429,12 @@ function Statsy:SendPartyMessage(msg)
         SendChatMessage(msg , chatType);
     else
         print(msg)
+    end
+end
+
+function Statsy:SendConfirmToParty(msg)
+    if (self.db.profile.sendConfirmToParty) then
+        self:SendPartyMessage(msg)
     end
 end
 

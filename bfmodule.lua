@@ -172,6 +172,10 @@ end
 
 function BFModule:WorldStateScoreFrame_Update()
     --Statsy:PrintMessage("Hook: WorldStateScoreFrame_Update")  -- FIXME: Вызывается несколько раз подряд
+    
+    if not (BFModule.db.profile.showBattlefieldLevels or BFModule.db.profile.showBattlefieldClassColors) then
+        return
+    end
 
     local scrollOffset = FauxScrollFrame_GetOffset(WorldStateScoreScrollFrame)
     for i = 1, MAX_SCORE_BUTTONS do
@@ -181,13 +185,20 @@ function BFModule:WorldStateScoreFrame_Update()
             local playerName, playerServer = BFModule:SplitNameServer(name)
             local fullName = playerName .. "-" .. playerServer
 
-            local nameStr = BFModule:WrapNameInClassColor(playerName, filename) .. "-" .. playerServer
+            local nameStr
+            if (BFModule.db.profile.showBattlefieldClassColors) then
+                nameStr = Utils:WrapNameInClassColor(playerName, filename) .. "-" .. playerServer
+            else
+                nameStr = nameWidget.GetText()
+            end
 
-            local playerFaction = faction == 0 and FACTION_HORDE or FACTION_ALIANCE
-            local player = BFModule:GetBattlefieldPlayer(playerFaction, fullName)
-            if (player) then
-                local lvlColor = player.archived and COLOR_GREY or "FFFFFFFF"   --TODO: Переделать цвета в константах без |c
-                nameStr = " " .. WrapTextInColorCode(player.level, lvlColor) .. " " .. nameStr
+            if (BFModule.db.profile.showBattlefieldLevels) then
+                local playerFaction = faction == 0 and FACTION_HORDE or FACTION_ALIANCE
+                local player = BFModule:GetBattlefieldPlayer(playerFaction, fullName)
+                if (player) then
+                    local lvlColor = player.archived and COLOR_GREY or "FFFFFFFF"   --TODO: Переделать цвета в константах без |c
+                    nameStr = " " .. WrapTextInColorCode(player.level, lvlColor) .. " " .. nameStr
+                end
             end
 
             nameWidget:SetFormattedText(nameStr)
@@ -214,11 +225,6 @@ function BFModule:SplitNameServer(nameServer)
         server = self.playerServer
     end
     return name, server
-end
-
--- TODO: Перенести в Utils
-function BFModule:WrapNameInClassColor(name, classFilename)
-    return WrapTextInColorCode(name, GetClassColorObj(classFilename).colorStr)
 end
 
 -- TODO: Перенести в Utils, сделать общи метод

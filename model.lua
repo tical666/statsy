@@ -90,8 +90,10 @@ Model = {
         }
     },
     profile = {
+        debugMessages = false,  -- Выводить отладочную информацию в чат
         makeConfirmScreenshots = false, -- Делать скриншот игры при вызове на БГ (для отлавливания события вне игры)
-        sendConfirmWhisper = true, -- Отправлять сообщение о старте игры себе для мигания иконки игры
+        sendConfirmWhisper = true, -- Отправлять сообщение о старте БГ себе для мигания иконки игры
+        sendConfirmToParty = false, -- Отправлять сообщение о старте БГ в группу
         showBattlefieldLevels = true,   -- Показывать уровни игроков на БГ
         showBattlefieldClassColors = true,  -- Окрашивать имена игроков согласно классам на БГ
         savePlayersStats = true,

@@ -105,3 +105,7 @@ function Utils:GetPlayerPVPRankInfo()
     local rankName, rankNumber = GetPVPRankInfo(rankId)
     return rankName, rankNumber
 end
+
+function Utils:WrapNameInClassColor(name, classFilename)
+    return WrapTextInColorCode(name, GetClassColorObj(classFilename).colorStr)
+end

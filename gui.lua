@@ -63,15 +63,15 @@ function GUI:CreateTab1(container)
 
     local commonContainer = self:CreateModelContainer(scrollContainer, L["GUI_COMMON"])
 
-    local cbMcs = AceGUI:Create("CheckBox")
-    cbMcs:SetLabel(L["GUI_MAKE_CONFIRM_SCREENSHOTS"])
-    cbMcs:SetValue(self.db.profile.makeConfirmScreenshots)
-    cbMcs:SetWidth(250)
-    cbMcs:SetCallback("OnValueChanged",
+    local cbSctp = AceGUI:Create("CheckBox")
+    cbSctp:SetLabel(L["GUI_SEND_CONFIRM_TO_PARTY"])
+    cbSctp:SetValue(self.db.profile.sendConfirmToParty)
+    cbSctp:SetWidth(250)
+    cbSctp:SetCallback("OnValueChanged",
         function(arg1, arg2, value)
-            self:SetMakeConfirmScreenshots(value)
+            self:SetSendConfirmToParty(value)
         end)
-    commonContainer:AddChild(cbMcs)
+    commonContainer:AddChild(cbSctp)
 
     local cbScw = AceGUI:Create("CheckBox")
     cbScw:SetLabel(L["GUI_SEND_CONFIRM_WHISPER"])
@@ -83,6 +83,26 @@ function GUI:CreateTab1(container)
         end)
     commonContainer:AddChild(cbScw)
 
+    local cbSbl = AceGUI:Create("CheckBox")
+    cbSbl:SetLabel(L["GUI_SHOW_BF_LEVELS"])
+    cbSbl:SetValue(self.db.profile.showBattlefieldLevels)
+    cbSbl:SetWidth(250)
+    cbSbl:SetCallback("OnValueChanged",
+        function(arg1, arg2, value)
+            self:SetShowBattlefieldLevels(value)
+        end)
+    commonContainer:AddChild(cbSbl)
+
+    local cbSbcc = AceGUI:Create("CheckBox")
+    cbSbcc:SetLabel(L["GUI_SHOW_BF_CLASS_COLORS"])
+    cbSbcc:SetValue(self.db.profile.showBattlefieldClassColors)
+    cbSbcc:SetWidth(250)
+    cbSbcc:SetCallback("OnValueChanged",
+        function(arg1, arg2, value)
+            self:SetShowBattlefieldClassColors(value)
+        end)
+    commonContainer:AddChild(cbSbcc)
+
     local cbDm = AceGUI:Create("CheckBox")
     cbDm:SetLabel(L["GUI_DEBUG_MESSAGES"])
     cbDm:SetValue(self.db.profile.debugMessages)
@@ -92,6 +112,16 @@ function GUI:CreateTab1(container)
             self:SetDebugMessages(value)
         end)
     commonContainer:AddChild(cbDm)
+
+    local cbMcs = AceGUI:Create("CheckBox")
+    cbMcs:SetLabel(L["GUI_MAKE_CONFIRM_SCREENSHOTS"])
+    cbMcs:SetValue(self.db.profile.makeConfirmScreenshots)
+    cbMcs:SetWidth(250)
+    cbMcs:SetCallback("OnValueChanged",
+        function(arg1, arg2, value)
+            self:SetMakeConfirmScreenshots(value)
+        end)
+    commonContainer:AddChild(cbMcs)
 end
 
 function GUI:CreateTab2(container)
@@ -215,8 +245,20 @@ function GUI:SetMakeConfirmScreenshots(value)
     self.db.profile.makeConfirmScreenshots = value
 end
 
+function GUI:SetSendConfirmToParty(value)
+    self.db.profile.sendConfirmToParty = value
+end
+
 function GUI:SetSendConfirmWhisper(value)
     self.db.profile.sendConfirmWhisper = value
+end
+
+function GUI:SetShowBattlefieldClassColors(value)
+    self.db.profile.showBattlefieldClassColors = value
+end
+
+function GUI:SetShowBattlefieldLevels(value)
+    self.db.profile.showBattlefieldLevels = value
 end
 
 function GUI:SetDebugMessages(value)
