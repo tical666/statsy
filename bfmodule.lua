@@ -34,24 +34,17 @@ end
 -- TODO: Подумать, может убрать прямой вызов?
 function BFModule:OnBattlefieldStart()
     self:ClearPlayersInfo()
-    self:RegisterEvent("GROUP_ROSTER_UPDATE")
     self:RegisterEvent("UNIT_TARGET")
     self:RegisterEvent("PLAYER_TARGET_CHANGED")
     self:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
     self:RegisterEvent("CHAT_MSG_ADDON")
-    self:UpdatePartyInfo()
 end
 
 function BFModule:OnBattlefieldEnd()
-    self:UnregisterEvent("GROUP_ROSTER_UPDATE")
     self:UnregisterEvent("UNIT_TARGET")
     self:UnregisterEvent("PLAYER_TARGET_CHANGED")
     self:UnregisterEvent("UPDATE_MOUSEOVER_UNIT")
     self:UnregisterEvent("CHAT_MSG_ADDON")
-end
-
-function BFModule:GROUP_ROSTER_UPDATE()
-    self:UpdatePartyInfo()
 end
 
 function BFModule:UNIT_TARGET(arg1, unitTarget)
@@ -106,6 +99,12 @@ end
 
 function BFModule:Test()
     --TODO: метод для тестов
+
+    local mapId = C_Map.GetBestMapForUnit("player")
+    print(mapId)
+
+    local pois = C_AreaPoiInfo.GetAreaPOIForMap(1461)
+    print(#pois)
 end
 
 function BFModule:UpdateTargetInfo(unitTarget)
@@ -260,5 +259,6 @@ end ]]
 
 --TODO: Использовать AceHook
 hooksecurefunc("WorldStateScoreFrame_Update", function()
+    self:UpdatePartyInfo()
     BFModule:WorldStateScoreFrame_Update()
 end)
