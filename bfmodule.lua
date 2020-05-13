@@ -78,7 +78,7 @@ end
 
 function BFModule:UpdatePartyInfo()
     -- TODO: Плохо обращаться к Statsy напрямую
-    dыыыыы.players[self.playerFaction] = {}   -- Сброс уже сохраненной информации
+    self.players[self.playerFaction] = {}   -- Сброс уже сохраненной информации
 
     local numGroupMembers = GetNumGroupMembers()
     for i = 1, numGroupMembers do
