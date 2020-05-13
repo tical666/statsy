@@ -78,7 +78,7 @@ end
 
 function BFModule:UpdatePartyInfo()
     -- TODO: Плохо обращаться к Statsy напрямую
-    self.players[self.playerFaction] = {}   -- Сброс уже сохраненной информации
+    dыыыыы.players[self.playerFaction] = {}   -- Сброс уже сохраненной информации
 
     local numGroupMembers = GetNumGroupMembers()
     for i = 1, numGroupMembers do
@@ -99,12 +99,6 @@ end
 
 function BFModule:Test()
     --TODO: метод для тестов
-
-    local mapId = C_Map.GetBestMapForUnit("player")
-    print(mapId)
-
-    local pois = C_AreaPoiInfo.GetAreaPOIForMap(1461)
-    print(#pois)
 end
 
 function BFModule:UpdateTargetInfo(unitTarget)
@@ -259,6 +253,6 @@ end ]]
 
 --TODO: Использовать AceHook
 hooksecurefunc("WorldStateScoreFrame_Update", function()
-    self:UpdatePartyInfo()
+    BFModule:UpdatePartyInfo()
     BFModule:WorldStateScoreFrame_Update()
 end)
