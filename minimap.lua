@@ -19,6 +19,8 @@ StatsyMinimap.StatsyLDB = LibStub:GetLibrary("LibDataBroker-1.1"):NewDataObject(
 			StatsyMinimap:SendMessage("STATSY", "PrintReport")
 		elseif (button == MOUSE_BUTTON_RIGHT) then
 			StatsyMinimap:SendMessage("GUI", "OptionsFrameToggle")
+		elseif (button == MOUSE_BUTTON_MIDDLE) then
+			StatsyMinimap:SendMessage("STATSY", "Test")
 		end
 	end
 })

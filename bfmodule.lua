@@ -9,13 +9,13 @@ end
 
 function BFModule:OnEnable()
     --self:RawHook("WorldStateScoreFrame_Update", true)
+    --self:RegisterEvent("CHAT_MSG_ADDON")
 end
 
 function BFModule:OnDisable()
 end
 
 function BFModule:Init()
-    Statsy:PrintMessage("Init")
     self.playerName = Utils:GetPlayerName()
     self.playerServer = Utils:GetPlayerServer()
     self.playerFaction = Utils:GetPlayerFaction()
@@ -27,7 +27,6 @@ function BFModule:Init()
 end
 
 function BFModule:InitDB()
-    Statsy:PrintMessage("InitDB")
     self.db = Statsy.db
 end
 
@@ -48,7 +47,6 @@ function BFModule:OnBattlefieldEnd()
 end
 
 function BFModule:UNIT_TARGET(arg1, unitTarget)
-    --Statsy:PrintMessage("UNIT_TARGET: " .. unitTarget)
     self:UpdateTargetInfo(unitTarget .. "target")
 end
 
@@ -60,7 +58,7 @@ function BFModule:UPDATE_MOUSEOVER_UNIT()
     self:UpdateTargetInfo("mouseover")
 end
 
-function BFModule:CHAT_MSG_ADDON(prefix, text, channel, sender, target, zoneChannelID, localID, name, instanceID)
+function BFModule:CHAT_MSG_ADDON(arg1, prefix, text, channel, sender, target, zoneChannelID, localID, name, instanceID)
     local event, msg = self:GetAddonEventMessage(prefix, text, channel, sender)
     if (event and msg and event == ADDON_EVENT_TARGET_INFO) then
         self:UpdateChatTargetInfo(msg)
@@ -77,7 +75,6 @@ function BFModule:UpdateChatTargetInfo(msg)
 end
 
 function BFModule:UpdatePartyInfo()
-    -- TODO: Плохо обращаться к Statsy напрямую
     self.players[self.playerFaction] = {}   -- Сброс уже сохраненной информации
 
     local numGroupMembers = GetNumGroupMembers()
@@ -95,10 +92,6 @@ function BFModule:ClearPlayersInfo()
         [FACTION_ALIANCE] = {},
         [FACTION_HORDE] = {}
     }
-end
-
-function BFModule:Test()
-    --TODO: метод для тестов
 end
 
 function BFModule:UpdateTargetInfo(unitTarget)
@@ -222,13 +215,19 @@ end
 
 -- TODO: Перенести в Utils, сделать общи метод
 function BFModule:SendAddonEventMessage(event, msg)
-    C_ChatInfo.SendAddonMessage(ADDON_PREFIX, event .. "@" .. msg, "INSTANCE_CHAT");
+    C_ChatInfo.SendAddonMessage(ADDON_PREFIX, event .. "@" .. msg, "INSTANCE_CHAT")
 end
 
 function BFModule:GetAddonEventMessage(prefix, msg, channel, sender)
     if (prefix ~= ADDON_PREFIX) then
         return
     end
+
+    Statsy:PrintMessage(prefix)
+    Statsy:PrintMessage(msg)
+    Statsy:PrintMessage(channel)
+    Statsy:PrintMessage(sender)
+
     if (channel ~= "INSTANCE_CHAT") then
         return
     end

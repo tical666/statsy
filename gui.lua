@@ -103,6 +103,17 @@ function GUI:CreateTab1(container)
         end)
     commonContainer:AddChild(cbSbcc)
 
+    local cbSuwrg = AceGUI:Create("CheckBox")
+    cbSuwrg:SetLabel(L["GUI_SHOW_UP_WINRATE_GAMES"])
+    cbSuwrg:SetValue(self.db.profile.showUpWinRateGames)
+    cbSuwrg:SetWidth(250)
+    cbSuwrg:SetCallback("OnValueChanged",
+        function(arg1, arg2, value)
+            self.db.profile.showUpWinRateGames = value
+            Statsy.StatsyInfo:Update()
+        end)
+    commonContainer:AddChild(cbSuwrg)
+
     local cbDm = AceGUI:Create("CheckBox")
     cbDm:SetLabel(L["GUI_DEBUG_MESSAGES"])
     cbDm:SetValue(self.db.profile.debugMessages)

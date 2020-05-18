@@ -19,6 +19,7 @@ L["GUI_SEND_CONFIRM_WHISPER"] = "Личное сообщение при вызо
 L["GUI_SEND_CONFIRM_TO_PARTY"] = "Сообщение в группу при вызове на БГ"
 L["GUI_SHOW_BF_CLASS_COLORS"] = "Окрашивать имена игроков по классам"
 L["GUI_SHOW_BF_LEVELS"] = "Показывать уровни игроков на БГ"
+L["GUI_SHOW_UP_WINRATE_GAMES"] = "Показывать кол-во игр для поднятия WR на 1%"
 L["GUI_DEBUG_MESSAGES"] = "Выводить отладочную информацию"
 L["GUI_COMMON"] = "Общие настройки"
 L["GUI_TOTAL_COMMONSTATS_SHORT"] = "Общая статистика"

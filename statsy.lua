@@ -215,8 +215,6 @@ end
 function Statsy:PrintReport()
     Utils:ColorPrint("Statsy report:", COLOR_RED)
 
-    self:GetModule("BFModule"):Test()
-
     local report = self:CreateReport()
     for g, group in ipairs(report) do
         if (#group.elements > 0) then
@@ -350,10 +348,10 @@ function Statsy:CalcSumStats(stats)
 
         local bfStats = stats[battlefield]
         local bfGames = bfStats.wins.value + bfStats.losses.value
-        local bfWinRate = bfGames == 0 and 0 or (bfStats.wins.value * 100 / bfGames)
+        local bfWinRate = bfGames == 0 and 0 or math.floor(bfStats.wins.value * 100 / bfGames)
 
         bfStats.games.value = bfGames
-        bfStats.winRate.value = Utils:PercentFormat(bfWinRate)
+        bfStats.winRate.value = Utils:FormatWinRate(bfWinRate, self.db.profile.showUpWinRateGames, bfStats.wins.value, bfStats.losses.value)
 
         sumGames = sumGames + bfGames
         sumWins = sumWins + bfStats.wins.value
@@ -370,13 +368,13 @@ function Statsy:CalcSumStats(stats)
         maxHonorableKills = maxHonorableKills >= bfMs.honorableKills.value and maxHonorableKills or bfMs.honorableKills.value
     end
     
-    sumWinRate = sumGames == 0 and 0 or (sumWins * 100 / sumGames)
+    sumWinRate = sumGames == 0 and 0 or math.floor(sumWins * 100 / sumGames)
 
     local totalStats = stats[BATTLEFIELD_NONE]
     totalStats.games.value = sumGames
     totalStats.wins.value = sumWins
     totalStats.losses.value = sumLosses
-    totalStats.winRate.value = Utils:PercentFormat(sumWinRate)
+    totalStats.winRate.value = Utils:FormatWinRate(sumWinRate, self.db.profile.showUpWinRateGames, totalStats.wins.value, totalStats.losses.value)
 
     local tsCs = totalStats.commonStats
     tsCs.killingBlows.value = sumKillingBlows
@@ -493,4 +491,13 @@ function Statsy:GetWinsLosses()
     local stats = self:GetStatsCopy()
     local totalStats = stats[BATTLEFIELD_NONE]
     return totalStats.wins.value, totalStats.losses.value, totalStats.winRate.value
+end
+
+-- Метод для тестов TODO: Убрать
+function Statsy:Test()
+    if (self.playerName ~= ADDON_TESTER_NAME) then
+        return
+    end
+
+    Statsy:PrintMessage("Statsy:Test")
 end

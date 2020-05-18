@@ -76,7 +76,7 @@ function Utils:DeepCopy(orig)
 end
 
 function Utils:PercentFormat(value)
-    return string.format("%0.0f", value) .. "%"
+    return string.format("%d%%", value)
 end
 
 function Utils:GetPlayerName()
@@ -112,4 +112,20 @@ end
 
 function Utils:ColorPrint(msg, color)
     print(WrapTextInColorCode(msg, color))
+end
+
+function Utils:CalcUpWinRateGames(wins, losses, winRate)
+    return math.ceil(((winRate + 1) * losses) / (100 - (winRate + 1)) - wins)
+end
+
+function Utils:FormatWinRate(winRate, showUpGames, wins, losses)
+    local games = wins + losses
+
+    local upWRText = ""
+    if (showUpGames and games > 0 and winRate < 99) then
+        local upWR = Utils:CalcUpWinRateGames(wins, losses, winRate)
+        upWRText = string.format("(%d)", upWR)
+    end
+
+    return Utils:PercentFormat(winRate) .. upWRText
 end

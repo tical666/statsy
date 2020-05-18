@@ -97,6 +97,7 @@ Model = {
         showBattlefieldLevels = true,   -- Показывать уровни игроков на БГ
         showBattlefieldClassColors = true,  -- Окрашивать имена игроков согласно классам на БГ
         savePlayersStats = true,
+        showUpWinRateGames = false,  -- Отображать необходимое кол-во побед для повышения WR на 1%
         minimap = { -- Параметры иконки у миникарты
             shown = true,
             locked = false,
