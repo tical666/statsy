@@ -1,3 +1,5 @@
+local L = LibStub("AceLocale-3.0"):GetLocale("Statsy")
+
 local StatsyMinimap = {
 	db = nil
 }
@@ -12,7 +14,8 @@ StatsyMinimap.StatsyLDB = LibStub:GetLibrary("LibDataBroker-1.1"):NewDataObject(
     icon = "Interface\\Icons\\ability_marksmanship",
     OnTooltipShow = function(tooltip)
 		tooltip:AddLine(WrapTextInColorCode("Statsy", COLOR_RED));
-		tooltip:AddLine("Report stats to chat")
+		tooltip:AddLine(WrapTextInColorCode("Left Click: ", COLOR_WHITE) .. L["MINIMAP_REPORT"])
+		tooltip:AddLine(WrapTextInColorCode("Right Click: ", COLOR_WHITE) .. L["MINIMAP_OPTIONS"])
 	end,
 	OnClick = function(arg1, button)
 		if (button == MOUSE_BUTTON_LEFT) then
