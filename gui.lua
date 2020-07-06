@@ -30,8 +30,8 @@ function GUI:OptionsFrameCreate()
     frame:SetTitle("Statsy Options")
     frame:SetCallback("OnClose",
         function(widget)
+            AceGUI:Release(self.optionsFrame)
             self.optionsFrame = nil
-            AceGUI:Release(widget)
         end)
     frame:SetLayout("Fill")
 
@@ -133,6 +133,15 @@ function GUI:CreateTab1(container)
             self:SetMakeConfirmScreenshots(value)
         end)
     commonContainer:AddChild(cbMcs)
+
+    local fixBtn = AceGUI:Create("Button")
+    fixBtn:SetText(L["GUI_FIX_DB"])
+    fixBtn:SetCallback("OnClick",
+        function()
+            local BFModule = Statsy:GetModule("BFModule")
+            BFModule:FixDatabase()
+        end)
+    scrollContainer:AddChild(fixBtn)
 end
 
 function GUI:CreateTab2(container)

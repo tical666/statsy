@@ -80,7 +80,7 @@ end
 function Statsy:UPDATE_BATTLEFIELD_SCORE()
     local battlefieldWinner = GetBattlefieldWinner()
     if (battlefieldWinner) then
-        self:GetModule("BFModule"):OnBattlefieldEnd()   --TODO: Переделать
+        self:GetModule("BFModule"):OnBattlefieldEnd(battlefieldWinner)   --TODO: Переделать
         self:UnregisterEvent("UPDATE_BATTLEFIELD_SCORE")
         print("UPDATE_BATTLEFIELD_SCORE: Winner=" .. battlefieldWinner)
     else
@@ -303,7 +303,7 @@ function Statsy:CreateReportElement(bfStats, path)
     local locale = "STATS_" .. string.upper(localeId)
     local modelPart = Utils:GetPropByPathArray(bfStats, pathArray)
 
-    if (modelPart ~= null and modelPart.report) then
+    if (modelPart ~= nil and modelPart.report) then
         return {
             title = L[locale],
             value = modelPart.value
@@ -500,4 +500,9 @@ function Statsy:Test()
     end
 
     Statsy:PrintMessage("Statsy:Test")
+    --QueryAuctionItems("Масляный черноротик")
+    --local BFModule = self:GetModule("BFModule")
+    --BFModule:UpdatePartyInfoTest()
+    --BFModule:FixDatabase()
+    --BFModule:OptimizeDatabase()
 end

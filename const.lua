@@ -1,5 +1,6 @@
 ADDON_PREFIX = "STATSY"
 ADDON_EVENT_TARGET_INFO = "TargetInfo"
+ADDON_EVENT_JOIN_INFO = "JoinInfo"
 ADDON_TESTER_NAME = "Лайф"
 
 COLOR_RED = "FFFB002B"
@@ -28,5 +29,10 @@ CHAT_SAY = 1
 CHAT_YELLOW = 2
 CHAT_PARTY = 3
 CHAT_GUILD = 4
+CHAT_WHISPER = 5
+CHAT_INSTANCE = 6
 
 MAX_SCORE_BUTTONS = 22
+
+RU_SERVERS = {"Змейталак", "Пламегор", "РокДелар", "Хроми", "ВестникРока"}
+RU_LETTERS = {"а", "б", "в", "г", "д", "е", "ё", "ж", "з", "и", "й", "к", "л", "м", "н", "о", "п", "р", "с", "т", "у", "ф", "х", "ц", "ч", "ш", "щ", "ь", "ы", "ъ", "э", "ю", "я", "А", "Б", "В", "Г", "Д", "Е", "Ё", "Ж", "З", "И", "Й", "К", "Л", "М", "Н", "О", "П", "Р", "С", "Т", "У", "Ф", "Х", "Ц", "Ч", "Ш", "Щ", "Ь", "Ы", "Ъ", "Э", "Ю", "Я"}
