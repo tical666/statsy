@@ -1,7 +1,7 @@
-## Interface: 11304
+## Interface: 11305
 ## Title: Statsy
 ## Author: Лайф-Змейталак
-## Version: 1.2.0
+## Version: 1.2.1
 ## SavedVariables: StatsyDB
 ## OptionalDeps: LibStub, Ace3
 
