@@ -14,6 +14,7 @@ function Statsy:InitDB()
 end
 
 function Statsy:Init()
+    self.version = GetAddOnMetadata("Statsy", "Version")
     self.playerName = Utils:GetPlayerName()
     self.playerServer = Utils:GetPlayerServer()
     self.playerFaction = Utils:GetPlayerFaction()
@@ -59,6 +60,7 @@ function Statsy:UPDATE_BATTLEFIELD_STATUS()
             self.lastBattlefieldStatus[i] = status
             if (status == "none") then
                 self:PrintMessage("UPDATE_BATTLEFIELD_STATUS: None")
+                self:GetModule("Guild"):OnBattlefieldEnd(nil)
             elseif (status == "confirm") then
                 local confirmMsg = "Statsy: " .. string.format(L["STATSY_BATTLEFIELD_CONFIRM"], mapName)
                 self:SendConfirmToParty(confirmMsg)
@@ -68,6 +70,7 @@ function Statsy:UPDATE_BATTLEFIELD_STATUS()
                 self:PrintMessage("UPDATE_BATTLEFIELD_STATUS: BG Active '" .. mapName .. "'")
                 self:RegisterEvent("UPDATE_BATTLEFIELD_SCORE")
                 self:GetModule("BFModule"):OnBattlefieldStart() --TODO: Переделать
+                self:GetModule("Guild"):OnBattlefieldStart() --TODO: Переделать
             elseif (status == "queued") then
                 self:PrintMessage("Statsy: BG Queued '" .. mapName .. "'")
             elseif (status == "error") then
@@ -81,6 +84,7 @@ function Statsy:UPDATE_BATTLEFIELD_SCORE()
     local battlefieldWinner = GetBattlefieldWinner()
     if (battlefieldWinner) then
         self:GetModule("BFModule"):OnBattlefieldEnd(battlefieldWinner)   --TODO: Переделать
+        self:GetModule("Guild"):OnBattlefieldEnd(battlefieldWinner)   --TODO: Переделать
         self:UnregisterEvent("UPDATE_BATTLEFIELD_SCORE")
         print("UPDATE_BATTLEFIELD_SCORE: Winner=" .. battlefieldWinner)
     else
@@ -236,11 +240,11 @@ function Statsy:PrintGroupReport(battlefield, isCommon, chatType)
     end
 
     local groupMsg = "[Statsy - " .. group.title .. "]:"
-    self:SendTypedMessage(groupMsg, chatType)
+    Utils:SendTypedMessage(groupMsg, chatType)
 
     for e, element in ipairs(group.elements) do
         local elementMsg = element.title .. ": " .. element.value
-        self:SendTypedMessage(elementMsg, chatType)
+        Utils:SendTypedMessage(elementMsg, chatType)
     end
 end
 
@@ -400,37 +404,9 @@ function Statsy:PrintLoadMessage()
     Utils:ColorPrint("Statsy: Loaded", COLOR_RED)
 end
 
-function Statsy:SendTypedMessage(msg, chatType)
-    if chatType == CHAT_PRINT then
-        print(msg)
-    elseif chatType == CHAT_SAY then
-        SendChatMessage(msg , "SAY")
-    elseif chatType == CHAT_PARTY then
-        self:SendPartyMessage(msg)
-    elseif chatType == CHAT_GUILD then
-        SendChatMessage(msg , "GUILD")
-    end
-end
-
-function Statsy:SendPartyMessage(msg)
-    local chatType = nil
-    if (UnitInBattleground("player") ~= nil) then
-        chatType = "INSTANCE_CHAT"
-    elseif IsInRaid() then
-        chatType = "RAID"
-    elseif IsInGroup() then
-        chatType = "PARTY"
-    end
-    if (chatType ~= nil) then
-        SendChatMessage(msg , chatType);
-    else
-        print(msg)
-    end
-end
-
 function Statsy:SendConfirmToParty(msg)
     if (self.db.profile.sendConfirmToParty) then
-        self:SendPartyMessage(msg)
+        Utils:SendPartyMessage(msg)
     end
 end
 
@@ -493,15 +469,25 @@ function Statsy:GetWinsLosses()
     return totalStats.wins.value, totalStats.losses.value, totalStats.winRate.value
 end
 
+function Statsy:GetVersion()
+    return self.version
+end
+
 -- Метод для тестов TODO: Убрать
 function Statsy:Test()
-    if (self.playerName ~= ADDON_TESTER_NAME) then
+    if (not Utils:Contains(ADDON_TESTER_NAMES, self.playerName)) then
         return
     end
 
     Statsy:PrintMessage("Statsy:Test")
+
+    local BFModule = self:GetModule("BFModule")
+    local Guild = self:GetModule("Guild")
+
+    local msg = BATTLEFIELD_WARSONG .. ":" .. "1"
+    Utils:SendAddonEventMessage(ADDON_EVENT_BATTLEFIELD_INFO, msg, CHAT_GUILD, nil)
+
     --QueryAuctionItems("Масляный черноротик")
-    --local BFModule = self:GetModule("BFModule")
     --BFModule:UpdatePartyInfoTest()
     --BFModule:FixDatabase()
     --BFModule:OptimizeDatabase()

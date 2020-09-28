@@ -108,6 +108,7 @@ Model = {
         players = {
             [FACTION_HORDE] = {},
             [FACTION_ALIANCE] = {}
-        }
+        },
+        latestVersion = nil
     }
 }

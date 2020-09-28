@@ -34,16 +34,13 @@ end
 
 -- TODO: Подумать, может убрать прямой вызов?
 function BFModule:OnBattlefieldStart()
-    Statsy:PrintMessage("OnBattlefieldStart")
     self:ClearPlayersInfo()
     local visibleOppositePlayers = self:CheckOppositePlayers()
     if (visibleOppositePlayers) then
-        Statsy:PrintMessage("OnBattlefieldStart: visible")
         self:RegisterEvent("GROUP_ROSTER_UPDATE")
         -- TODO: Вставить передачу данных, если событие не вызывается
         local partyBehavior = {
             OnInfo = function(fullName)
-                Statsy:PrintMessage("OnInfo (OBS): " .. fullName)
                 self:SendInfoToPartyPlayer(fullName)
             end
         }
@@ -68,22 +65,17 @@ function BFModule:OnBattlefieldEnd(battlefieldWinner)
 end
 
 function BFModule:UPDATE_BATTLEFIELD_SCORE()
-    Statsy:PrintMessage("UPDATE_BATTLEFIELD_SCORE")
     local visibleOppositePlayers = self:CheckOppositePlayers()
     if (visibleOppositePlayers) then
-        Statsy:PrintMessage("UPDATE_BATTLEFIELD_SCORE: visible")
         self:UnregisterEvent("UPDATE_BATTLEFIELD_SCORE")
         self:RegisterEvent("GROUP_ROSTER_UPDATE")
         local partyBehavior = {
             OnInfo = function(fullName)
-                Statsy:PrintMessage("OnInfo (UBS): " .. fullName)
                 self:SendInfoToPartyPlayer(fullName)
             end,
             OnJoin = function(fullName)
-                Statsy:PrintMessage("OnJoin (UBS): " .. fullName)
             end,
             OnLeave = function(fullName)
-                Statsy:PrintMessage("OnLeave (UBS): " .. fullName)
             end
         }
         self:UpdatePartyInfo(partyBehavior)
@@ -91,17 +83,13 @@ function BFModule:UPDATE_BATTLEFIELD_SCORE()
 end
 
 function BFModule:GROUP_ROSTER_UPDATE()
-    Statsy:PrintMessage("GROUP_ROSTER_UPDATE")
     local partyBehavior = {
         OnInfo = function(fullName)
-            Statsy:PrintMessage("OnInfo (GRS): " .. fullName)
         end,
         OnJoin = function(fullName)
-            Statsy:PrintMessage("OnJoin (GRS): " .. fullName)
             self:SendInfoToPartyPlayer(fullName)
         end,
         OnLeave = function(fullName)
-            Statsy:PrintMessage("OnLeave (GRS): " .. fullName)
         end
     }
     self:UpdatePartyInfo(partyBehavior)
@@ -120,7 +108,7 @@ function BFModule:UPDATE_MOUSEOVER_UNIT()
 end
 
 function BFModule:CHAT_MSG_ADDON(arg1, prefix, text, channel, sender, target, zoneChannelID, localID, name, instanceID)
-    local event, msg = self:GetAddonEventMessage(prefix, text, channel, sender)
+    local event, msg = Utils:GetAddonEventMessage(prefix, text, channel, sender)
     if (not event or not msg) then
         return
     end
@@ -190,8 +178,6 @@ end
 
 -- До начала игры информация о противниках иногда недоступна. Необходимо отправлять её после старта.
 function BFModule:CheckOppositePlayers()
-    Statsy:PrintMessage("CheckOppositePlayers")
-
     self.numOppositePlayers = 0
 
     --[[ local numScores = GetNumBattlefieldScores()
@@ -218,8 +204,6 @@ function BFModule:CheckOppositePlayers()
 end
 
 function BFModule:SendInfoToPartyPlayer(targetName)
-    Statsy:PrintMessage("SendInfoToPartyPlayer: " .. targetName)
-
     local numScores = GetNumBattlefieldScores()
     self.numOppositePlayers = 0
     for i = 1, numScores do
@@ -232,7 +216,7 @@ function BFModule:SendInfoToPartyPlayer(targetName)
 
             local player = BFModule:GetBattlefieldPlayer(faction, fullName)
             if (player) then
-                self:SendAddonEventMessage(ADDON_EVENT_JOIN_INFO, fullName .. ":" .. player.level, CHAT_WHISPER, targetName)
+                Utils:SendAddonEventMessage(ADDON_EVENT_JOIN_INFO, fullName .. ":" .. player.level, CHAT_WHISPER, targetName)
             end
         end
     end
@@ -272,7 +256,7 @@ function BFModule:UpdateTargetInfo(unitTarget)
     local fullName = self:GetFullName(name, server)
     self:AddBattlefieldPlayer(unitFaction, fullName, level, true)
 
-    self:SendAddonEventMessage(ADDON_EVENT_TARGET_INFO, fullName .. ":" .. level, CHAT_INSTANCE, nil)
+    Utils:SendAddonEventMessage(ADDON_EVENT_TARGET_INFO, fullName .. ":" .. level, CHAT_INSTANCE, nil)
 end
 
 function BFModule:CreatePlayer(fullName, level)
@@ -374,41 +358,6 @@ function BFModule:SplitNameServer(nameServer)
         server = self.playerServer
     end
     return name, server
-end
-
--- TODO: Перенести в Utils, сделать общи метод
-function BFModule:SendAddonEventMessage(event, msg, chatType, target)
-    local chatTypeStr
-    if (chatType == CHAT_INSTANCE) then
-        chatTypeStr = "INSTANCE_CHAT"
-    elseif (chatType == CHAT_WHISPER) then
-        chatTypeStr = "WHISPER"
-    else
-        Statsy:PrintMessage(WrapTextInColorCode("Error: SendAddonEventMessage unrecognized chatType", COLOR_RED))
-    end
-    C_ChatInfo.SendAddonMessage(ADDON_PREFIX, event .. "@" .. msg, chatTypeStr, target)
-end
-
-function BFModule:GetAddonEventMessage(prefix, msg, channel, sender)
-    if (prefix ~= ADDON_PREFIX) then
-        return
-    end
-
-    if (channel ~= "INSTANCE_CHAT") then
-        return
-    end
-    if (sender == self.playerName) then
-        return
-    end
-
-    local parts = Utils:Split(msg, "@")
-    if (#parts > 1) then
-        return parts[1], parts[2]
-    elseif (#parts == 1) then
-        return parts[1], nil
-    else
-        return nil, nil
-    end
 end
 
 function BFModule:OptimizeDatabase()
