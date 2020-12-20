@@ -1,0 +1,52 @@
+local L = LibStub("AceLocale-3.0"):NewLocale("Statsy", "enUS")
+if not L then
+    return
+end
+
+L["SYSTEM_BATTLEFIELD_WARSONG"] = "Warsong Gulch"
+L["SYSTEM_BATTLEFIELD_ARATHI"] = "Arathi Basin"
+L["SYSTEM_BATTLEFIELD_ALTERAC"] = "Alterac Valley"
+
+L["STATSY_BATTLEFIELD_CONFIRM"] = "You can enter the battlefield: %q"
+
+L["GUI_TAB_1"] = "Common settings"
+L["GUI_TAB_2"] = "Statistics output"
+L["GUI_MAKE_CONFIRM_SCREENSHOTS"] = "Take a screenshot when called to BG"
+L["GUI_SEND_CONFIRM_WHISPER"] = "Whisper message when called to BG"
+L["GUI_SEND_CONFIRM_TO_PARTY"] = "Group message when called to BG"
+L["GUI_SHOW_BF_CLASS_COLORS"] = "Color player names by class"
+L["GUI_SHOW_BF_LEVELS"] = "Show player levels on BG"
+L["GUI_SHOW_UP_WINRATE_GAMES"] = "Show the number of games to raise WR by 1%"
+L["GUI_DEBUG_MESSAGES"] = "Output debug messages"
+L["GUI_FIX_DB"] = "Refresh database"
+L["GUI_COMMON"] = "Common settings"
+L["GUI_TOTAL_COMMONSTATS_SHORT"] = "Total stats"
+L["GUI_TOTAL_COMMONSTATS"] = "Total stats from all BGs"
+L["GUI_TOTAL_MAXSTATS"] = "Max stats from all BGs"
+L["GUI_BATTLEFIELD_COMMONSTATS"] = "Total stats from %q"
+L["GUI_BATTLEFIELD_MAXSTATS"] = "Max stats from %q"
+L["GUI_SEND_SAY"] = "Say"
+L["GUI_SEND_PARTY"] = "To group"
+L["GUI_SEND_GUILD"] = "To guild"
+
+L["MINIMAP_REPORT"] = "Print statistics to chat"
+L["MINIMAP_OPTIONS"] = "Settings"
+
+L["STATS_GAMES"] = "Games"
+L["STATS_WINS"] = "Wins"
+L["STATS_LOSSES"] = "Losses"
+L["STATS_WINRATE"] = "Win rate"
+L["STATS_KILLINGBLOWS"] = "Killing blows"
+L["STATS_DEATHS"] = "Deaths"
+L["STATS_HONORABLEKILLS"] = "Honorable kills"
+L["STATS_FLAGCAPTURES"] = "Flag captures"
+L["STATS_FLAGRETURNS"] = "Flag returns"
+L["STATS_BASESASSAULTED"] = "Bases assaulted"
+L["STATS_BASESDEFENDED"] = "Bases defended"
+L["STATS_GRAVEYARDSASSAULTED"] = "Graveyards assaulted"
+L["STATS_GRAVEYARDSDEFENDED"] = "Graveyards defended"
+L["STATS_TOWERSASSAULTED"] = "Towers assaulted"
+L["STATS_TOWERSDEFENDED"] = "Towers defended"
+L["STATS_MINESCAPTURED"] = "Mines captured"
+L["STATS_LEADERSKILLED"] = "Leaders killed"
+L["STATS_SECONDARYOBJECTIVES"] = "Secondary objectives"

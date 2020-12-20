@@ -52,6 +52,10 @@ function Guild:SendBatlefieldInfoToGuild()
     if (info == nil) then
         return
     end
+
+    -- Сохранение информации о БГ для себя
+    self:SavePlayerBgInfo(self.playerName, info.id, info.instanceID)
+
     local msg = info.id .. ":" .. info.instanceID
     Utils:SendAddonEventMessage(ADDON_EVENT_BATTLEFIELD_INFO, msg, CHAT_GUILD, nil)
 end
@@ -101,6 +105,9 @@ function Guild:OnBattlefieldStart()
 end
 
 function Guild:OnBattlefieldEnd(winner)
+    -- Сохранение информации о БГ для себя
+    self:SavePlayerBgInfo(self.playerName, BATTLEFIELD_NONE, INSTANCE_ID_NONE)
+    
     local msg = BATTLEFIELD_NONE .. ":" .. INSTANCE_ID_NONE
     Utils:SendAddonEventMessage(ADDON_EVENT_BATTLEFIELD_INFO, msg, CHAT_GUILD, nil)
 end
